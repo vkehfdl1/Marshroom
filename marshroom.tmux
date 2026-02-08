@@ -10,7 +10,8 @@ source "$CURRENT_DIR/cli/scripts/helpers.sh"
 
 marshroom_status_interval=$(get_tmux_option "@marshroom_interval" "5")
 marshroom_status_right_length=$(get_tmux_option "@marshroom_status_right_length" "80")
-marshroom_open_ide_key=$(get_tmux_option "@marshroom_open_ide_key" "P")
+marshroom_open_pycharm_key=$(get_tmux_option "@marshroom_open_pycharm_key" "C-p")
+marshroom_open_vscode_key=$(get_tmux_option "@marshroom_open_vscode_key" "C-v")
 marshroom_status_key=$(get_tmux_option "@marshroom_status_key" "I")
 marshroom_pane_format=$(get_tmux_option "@marshroom_pane_format" " #{marshroom_status} | #P: #{b:pane_current_path} ")
 
@@ -59,5 +60,6 @@ set_tmux_option "status-right-length" "$marshroom_status_right_length"
 
 MARSH="$CURRENT_DIR/cli/marsh"
 
-tmux bind-key "$marshroom_open_ide_key" run-shell -b "cd '#{pane_current_path}' && '$MARSH' open-ide"
+tmux bind-key "$marshroom_open_pycharm_key" run-shell -b "cd '#{pane_current_path}' && '$MARSH' open-ide pycharm"
+tmux bind-key "$marshroom_open_vscode_key" run-shell -b "cd '#{pane_current_path}' && '$MARSH' open-ide vscode"
 tmux bind-key "$marshroom_status_key" display-popup -d '#{pane_current_path}' -E "'$MARSH' status"

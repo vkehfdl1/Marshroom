@@ -2,7 +2,7 @@
 
 ## 1. What is Marshroom?
 
-Marshroom is a macOS developer productivity tool that uses GitHub Issues for your daily workflow. It eliminates the cognitive load of context switching between GitHub, your terminal, and your IDE by unifying issue management, branch lifecycle, and AI-powered code execution into a single cockpit. Think of it as mission control: you draft ideas, queue them in a cart, execute them with Claude Code, review in PyCharm, and ship PRs — all without leaving your flow. The status pipeline (`Soon → Running → Pending → Completed`) gives you a real-time HUD of what you're working on across every repo.
+Marshroom is a macOS developer productivity tool that uses GitHub Issues for your daily workflow. It eliminates the cognitive load of context switching between GitHub, your terminal, and your IDE by unifying issue management, branch lifecycle, and AI-powered code execution into a single cockpit. Think of it as mission control: you draft ideas, queue them in a cart, execute them with Claude Code, review in your IDE, and ship PRs — all without leaving your flow. The status pipeline (`Soon → Running → Pending → Completed`) gives you a real-time HUD of what you're working on across every repo.
 
 ## 2. Prerequisites
 
@@ -86,7 +86,8 @@ tmux source-file ~/.tmux.conf
 This adds:
 - **Status bar HUD** — `#{marshroom_status}` in `status-right` shows the current issue and status, refreshes every 5 seconds
 - **Per-pane border HUD** — the plugin automatically sets `pane-border-status top` and `pane-border-format` so each tmux pane shows its own issue based on the pane's working directory. No manual configuration needed.
-- **Prefix + P** — opens PyCharm for the current pane's repo
+- **Prefix + Ctrl-p** — opens PyCharm for the current pane's repo
+- **Prefix + Ctrl-v** — opens VSCode for the current pane's repo
 - **Prefix + I** — pops up the issue status for the current repo
 
 Optional plugin options (add before the `run` line):
@@ -94,7 +95,8 @@ Optional plugin options (add before the `run` line):
 ```bash
 set -g @marshroom_interval 5              # Status refresh interval (seconds)
 set -g @marshroom_status_right_length 80  # Max width for status-right
-set -g @marshroom_open_ide_key P          # Keybinding for PyCharm
+set -g @marshroom_open_pycharm_key C-p    # Keybinding for PyCharm (Prefix+Ctrl-p)
+set -g @marshroom_open_vscode_key C-v     # Keybinding for VSCode (Prefix+Ctrl-v)
 set -g @marshroom_status_key I            # Keybinding for status popup
 set -g @marshroom_pane_format " #{marshroom_status} | #P: #{b:pane_current_path} "
                                           # Custom pane border format (default shown)
@@ -185,10 +187,12 @@ This skill:
 - Includes the original issue body in the PR description for reviewer context
 - Updates the cart status to `pending`
 
-To open PyCharm for code review, press **Prefix + P** in tmux, or run:
+To open your IDE for code review, press **Prefix + Ctrl-p** (PyCharm) or **Prefix + Ctrl-v** (VSCode) in tmux, or run:
 
 ```bash
-marsh open-ide
+marsh open-ide          # auto-detect installed IDE
+marsh open-ide pycharm  # explicit PyCharm
+marsh open-ide vscode   # explicit VSCode
 ```
 
 Optionally validate the PR before merging:
@@ -271,19 +275,23 @@ The tmux status bar and pane borders show the current issue for whichever repo t
 | `marsh hud` | Output tmux-formatted status string for current repo |
 | `marsh start [#N]` | Mark a cart issue as `running` (interactive pick if multiple) |
 | `marsh status` | Show all cart entries for the current repo |
-| `marsh open-ide` | Open current directory in PyCharm |
+| `marsh open-ide [ide]` | Open directory in IDE (pycharm, vscode; auto-detects) |
 | `marsh pr` | Mark current branch's issue as `pending` |
 | `marsh help` | Show help message |
 
-### PyCharm Integration
+### IDE Integration
 
-Marshroom integrates with PyCharm for code review:
+Marshroom integrates with PyCharm and VSCode for code review:
 
-- **tmux keybinding**: `Prefix + P` runs `marsh open-ide`, which opens the current repo in PyCharm.
-- **Direct CLI**: `marsh open-ide` from any repo directory.
-- Auto-detects PyCharm Professional, PyCharm CE, or falls back to the `pycharm` CLI launcher.
+- **tmux keybindings**: `Prefix + Ctrl-p` opens PyCharm, `Prefix + Ctrl-v` opens VSCode
+- **Direct CLI**: `marsh open-ide pycharm`, `marsh open-ide vscode`, or just `marsh open-ide` to auto-detect
+- **Environment variable**: set `MARSH_IDE=vscode` (or `pycharm`) to change the default for `marsh open-ide` without arguments
+- **PyCharm detection**: PyCharm Professional → PyCharm CE → PyCharm → `pycharm` CLI
+- **VSCode detection**: Visual Studio Code → Visual Studio Code - Insiders → `code` CLI
 
-Install PyCharm if not present: `brew install --cask pycharm`
+Install if not present:
+- PyCharm: `brew install --cask pycharm`
+- VSCode: `brew install --cask visual-studio-code`
 
 ## 7. Configuration Reference
 
@@ -353,7 +361,8 @@ The Marshroom tpm plugin supports these options (set before the `run` line in `.
 |--------|---------|-------------|
 | `@marshroom_interval` | `5` | Status bar refresh interval (seconds) |
 | `@marshroom_status_right_length` | `80` | Max width for status-right |
-| `@marshroom_open_ide_key` | `P` | Keybinding for PyCharm (prefix + key) |
+| `@marshroom_open_pycharm_key` | `C-p` | Keybinding for PyCharm (prefix + Ctrl-p) |
+| `@marshroom_open_vscode_key` | `C-v` | Keybinding for VSCode (prefix + Ctrl-v) |
 | `@marshroom_status_key` | `I` | Keybinding for status popup (prefix + key) |
 | `@marshroom_pane_format` | `" #{marshroom_status} \| #P: #{b:pane_current_path} "` | Pane border format (auto-set by plugin) |
 
@@ -398,16 +407,19 @@ marsh status
 #     Status: soon | Branch: Feature/#55
 ```
 
-### marsh open-ide
+### marsh open-ide [ide]
 
-Open the current directory in PyCharm.
+Open the current directory in an IDE. Supports `pycharm` and `vscode`.
 
 ```bash
-marsh open-ide
-# 🍄 Opened PyCharm Professional
+marsh open-ide          # auto-detect (PyCharm first, then VSCode)
+marsh open-ide pycharm  # 🍄 Opened PyCharm Professional
+marsh open-ide vscode   # 🍄 Opened Visual Studio Code
 ```
 
-Tries PyCharm Professional → PyCharm CE → PyCharm → `pycharm` CLI launcher.
+Auto-detection order: PyCharm Professional → PyCharm CE → PyCharm → `pycharm` CLI → VSCode → VSCode Insiders → `code` CLI.
+
+Set `MARSH_IDE=vscode` to change the default when no argument is given.
 
 ### marsh pr
 
