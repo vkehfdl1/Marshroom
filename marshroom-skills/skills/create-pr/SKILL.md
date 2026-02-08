@@ -1,3 +1,8 @@
+---
+name: create-pr
+description: Create a Pull Request for a Marshroom cart issue matching the current branch with proper closing keywords
+---
+
 Create a Pull Request for a Marshroom cart issue matching the current branch.
 
 Steps:

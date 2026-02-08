@@ -1,3 +1,8 @@
+---
+name: validate-pr
+description: Validate the current Pull Request branch name, body, and status against Marshroom conventions
+---
+
 Validate the current Pull Request against Marshroom conventions.
 
 Steps:

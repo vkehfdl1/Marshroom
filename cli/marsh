@@ -71,16 +71,21 @@ status_label() {
 # ─── Subcommands ────────────────────────────────────────────────────
 
 cmd_hud() {
+  local pane_dir="${1:-}"
+  if [[ -n "$pane_dir" && -d "$pane_dir" ]]; then
+    cd "$pane_dir"
+  fi
+
   local state owner_repo
   state=$(read_state)
 
   if [[ "$state" == "{}" ]]; then
-    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    echo "#[fg=colour244]🍄 Marshroom#[fg=default]"
     return 0
   fi
 
   owner_repo=$(detect_repo 2>/dev/null) || {
-    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    echo "#[fg=colour244]🍄 Marshroom#[fg=default]"
     return 0
   }
 
@@ -99,7 +104,7 @@ cmd_hud() {
   count=$(echo "$entries" | jq 'length')
 
   if [[ "$count" -eq 0 ]]; then
-    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    echo "#[fg=colour244]🍄 ${owner_repo} — No tasks#[fg=default]"
     return 0
   fi
 
@@ -371,7 +376,7 @@ HELP
 # ─── Main dispatch ──────────────────────────────────────────────────
 
 case "${1:-help}" in
-  hud)      cmd_hud ;;
+  hud)      shift; cmd_hud "${1:-}" ;;
   start)    shift; cmd_start "${1:-}" ;;
   status)   cmd_status ;;
   open-ide) cmd_open_ide ;;

@@ -1,3 +1,8 @@
+---
+name: start-issue
+description: Start working on a Marshroom cart issue — creates branch, injects context, updates status to running
+---
+
 Start working on a Marshroom cart issue in the current repository.
 
 Steps:
