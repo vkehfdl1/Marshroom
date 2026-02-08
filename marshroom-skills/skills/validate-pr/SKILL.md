@@ -13,8 +13,8 @@ Steps:
 - If mismatched, show: "Branch mismatch: expected '{branchName}', got '{actual}'"
 
 **PR Body Check:**
-- The body MUST contain `Closes #{issueNumber}`
-- If missing, suggest: `gh pr edit --body "$(gh pr view --json body -q '.body')\n\nCloses #<issueNumber>"`
+- The body MUST contain `close #{issueNumber}`
+- If missing, suggest: `gh pr edit --body "$(gh pr view --json body -q '.body')\n\nclose #<issueNumber>"`
 
 **Status Check:**
 - Read the `status` field from the matched cart entry

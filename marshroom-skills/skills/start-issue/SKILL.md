@@ -9,7 +9,7 @@ Steps:
 6. If no matching cart entries, tell the user this repo has no cart issues
 7. If `$ARGUMENTS` contains an issue number, find that entry; otherwise if multiple matches, list them and ask the user to pick one
 8. Run `git checkout main && git pull origin main` to ensure main is up to date
-9. Create and checkout the branch: `git checkout -b {branchName}` The branch name should be `Feature/#{issueNumber}`.
+9. Create and checkout the branch: `git checkout -b {branchName}` The branch name should be `Feature/#N` or `HotFix/#N`. `N` is issue number.
 10. Update issue status: run `marsh start #{issueNumber}` (if `marsh` is available in PATH). If `marsh` is not found, skip this step silently.
 11. Inject issue context:
     - Read the `issueBody` field from the matched cart entry
