@@ -18,7 +18,7 @@ actor AnthropicClient {
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-        let systemPrompt = "You are a GitHub issue title generator. Given raw developer thoughts and optional project context (CLAUDE.md), generate a concise, clear issue title. Output ONLY the title, nothing else."
+        let systemPrompt = "You are a GitHub issue title generator. Given raw developer thoughts and optional project context (CLAUDE.md), generate a concise, simple, and clear issue title. Title should be short as possible. Output ONLY the title, nothing else."
 
         var userContent = "Repository: \(repoName)\n\nRaw input:\n\(rawInput)"
         if let claudeMd, !claudeMd.isEmpty {
