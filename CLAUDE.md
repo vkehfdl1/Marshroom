@@ -38,7 +38,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configurati
 - `marsh hud` — tmux status bar + pane border output; branch-aware three-tier resolution (branch match → single/sole runner → summary)
 - `marsh start [#N]` — set cart item status to "running"
 - `marsh status` — show cart items for current repo (marks current branch with `→`)
-- `marsh open-ide` — open PyCharm for current directory
+- `marsh open-ide [pycharm|vscode]` — open IDE for current directory (auto-detects if omitted)
 - `marsh pr` — set status to "pending", store PR number/URL
 - Reads/writes `~/.config/marshroom/state.json` atomically
 
@@ -68,7 +68,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configurati
 1. **Draft**: Type raw idea in Issue Composer → Cmd+Enter → LLM title → Create Issue
 2. **Inject**: `/start-issue #123` → branch created, context loaded, status → running
 3. **Execute**: Claude codes → tmux HUD shows `🍄 #123 [Running]`
-4. **Review**: `Prefix+P` in tmux → PyCharm opens → review code
+4. **Review**: `Prefix+C-p` (PyCharm) or `Prefix+C-v` (VSCode) in tmux → IDE opens → review code
 5. **Ship**: `/create-pr` → PR with `Closes #N` → merge → issue auto-closes
 
 ## Key Architecture Notes

@@ -274,8 +274,7 @@ cmd_status() {
     "#\(.issueNumber) \(.issueTitle)\n    Status: \(.status // "soon") | Branch: \(.branchName // "—")\(.prURL // "" | if . != "" then "\n    PR: \(.)" else "" end)\n"'
 }
 
-cmd_open_ide() {
-  # Try PyCharm variants in order
+open_pycharm() {
   if open -a "PyCharm Professional" "$(pwd)" 2>/dev/null; then
     echo "🍄 Opened PyCharm Professional"
   elif open -a "PyCharm CE" "$(pwd)" 2>/dev/null; then
@@ -286,11 +285,55 @@ cmd_open_ide() {
     pycharm . &
     echo "🍄 Opened PyCharm (CLI launcher)"
   else
-    echo "Error: PyCharm not found." >&2
-    echo "Install PyCharm from: https://www.jetbrains.com/pycharm/download/" >&2
-    echo "Or install via brew: brew install --cask pycharm" >&2
-    exit 1
+    return 1
   fi
+}
+
+open_vscode() {
+  if open -a "Visual Studio Code" "$(pwd)" 2>/dev/null; then
+    echo "🍄 Opened Visual Studio Code"
+  elif open -a "Visual Studio Code - Insiders" "$(pwd)" 2>/dev/null; then
+    echo "🍄 Opened Visual Studio Code - Insiders"
+  elif command -v code &>/dev/null; then
+    code .
+    echo "🍄 Opened VSCode (CLI launcher)"
+  else
+    return 1
+  fi
+}
+
+cmd_open_ide() {
+  local ide="${1:-${MARSH_IDE:-}}"
+
+  case "$ide" in
+    pycharm)
+      open_pycharm || {
+        echo "Error: PyCharm not found." >&2
+        echo "Install via: brew install --cask pycharm" >&2
+        exit 1
+      }
+      ;;
+    vscode)
+      open_vscode || {
+        echo "Error: VSCode not found." >&2
+        echo "Install via: brew install --cask visual-studio-code" >&2
+        exit 1
+      }
+      ;;
+    "")
+      # Auto-detect: try PyCharm first (backward compat), then VSCode
+      open_pycharm 2>/dev/null || open_vscode 2>/dev/null || {
+        echo "Error: No supported IDE found (tried PyCharm, VSCode)." >&2
+        echo "Install one: brew install --cask pycharm" >&2
+        echo "         or: brew install --cask visual-studio-code" >&2
+        exit 1
+      }
+      ;;
+    *)
+      echo "Error: Unknown IDE '${ide}'. Supported: pycharm, vscode" >&2
+      exit 1
+      ;;
+  esac
 }
 
 cmd_pr() {
@@ -386,14 +429,17 @@ cmd_help() {
 Usage: marsh <command> [options]
 
 Commands:
-  hud          Output tmux-formatted status string for current repo
-  start [#N]   Mark a cart issue as running (prompts if multiple)
-  status       Show cart entries for the current repo
-  open-ide     Open current directory in PyCharm
-  pr           Mark current branch's issue as pending (PR created)
-  help         Show this help message
+  hud              Output tmux-formatted status string for current repo
+  start [#N]       Mark a cart issue as running (prompts if multiple)
+  status           Show cart entries for the current repo
+  open-ide [ide]   Open directory in IDE (pycharm, vscode; auto-detects if omitted)
+  pr               Mark current branch's issue as pending (PR created)
+  help             Show this help message
 
 State file: ~/.config/marshroom/state.json
+
+Environment variables:
+  MARSH_IDE        Default IDE when no argument given (pycharm, vscode)
 
 tmux integration (tpm):
   set -g @plugin 'vkehfdl1/Marshroom'
@@ -404,6 +450,9 @@ Examples:
   marsh start #42        # start working on issue #42
   marsh start            # interactive pick if multiple issues
   marsh status           # show all cart items for current repo
+  marsh open-ide         # auto-detect IDE and open
+  marsh open-ide vscode  # open in VSCode
+  marsh open-ide pycharm # open in PyCharm
   marsh pr               # mark current branch as PR pending
 HELP
 }
@@ -414,7 +463,7 @@ case "${1:-help}" in
   hud)      shift; cmd_hud "${1:-}" ;;
   start)    shift; cmd_start "${1:-}" ;;
   status)   cmd_status ;;
-  open-ide) cmd_open_ide ;;
+  open-ide) shift; cmd_open_ide "${1:-}" ;;
   pr)       cmd_pr ;;
   help|--help|-h) cmd_help ;;
   *)
