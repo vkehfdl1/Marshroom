@@ -23,9 +23,23 @@ struct CartView: View {
                 Text("Today's Cart")
                     .font(.headline)
                 Spacer()
-                Text("\(appState.todayCart.count) items")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    ForEach(IssueStatus.allCases, id: \.self) { status in
+                        let count = appState.todayCart.filter { $0.status == status }.count
+                        if count > 0 {
+                            HStack(spacing: 3) {
+                                Image(systemName: status.iconName)
+                                    .font(.caption2)
+                                Text("\(count)")
+                                    .font(.caption)
+                            }
+                            .foregroundStyle(status.color)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(status.color.opacity(0.12), in: Capsule())
+                        }
+                    }
+                }
             }
             .padding()
 

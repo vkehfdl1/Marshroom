@@ -23,6 +23,30 @@ struct MenuBarView: View {
 
             Divider()
 
+            // Status summary bar
+            if !appState.todayCart.isEmpty {
+                HStack(spacing: 10) {
+                    ForEach([IssueStatus.running, .pending, .soon], id: \.self) { status in
+                        let count = appState.todayCart.filter { $0.status == status }.count
+                        if count > 0 {
+                            HStack(spacing: 3) {
+                                Circle()
+                                    .fill(status.color)
+                                    .frame(width: 8, height: 8)
+                                Text("\(count)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+
+                Divider()
+            }
+
             if appState.todayCart.isEmpty {
                 // Empty state
                 VStack(spacing: 8) {
@@ -78,6 +102,11 @@ private struct MenuBarIssueRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            Image(systemName: item.status.iconName)
+                .font(.caption)
+                .foregroundStyle(item.status.color)
+                .frame(width: 16)
+
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text("#\(item.issue.number)")
@@ -93,6 +122,10 @@ private struct MenuBarIssueRow: View {
             }
 
             Spacer()
+
+            Text(item.status.displayName)
+                .font(.caption2)
+                .foregroundStyle(item.status.color)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
