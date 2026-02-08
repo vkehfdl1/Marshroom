@@ -33,29 +33,12 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj \
 
 The built app lands in `build/Build/Products/Debug/Marshroom.app`. Move it to `/Applications` or run directly.
 
-### Install Claude Code skills
+### Install skills
 
-**Option A — Vercel Agent Skills (recommended):**
-
-```bash
-cd /path/to/your-project
-npx skills add marshroom/marshroom-skills
-```
-
-**Option B — Installer script:**
+**Vercel Agent Skills (recommended):**
 
 ```bash
-cd /path/to/your-project
-bash /path/to/marshroom/marshroom-skills/scripts/install-skill.sh
-```
-
-**Option C — Manual copy:**
-
-```bash
-mkdir -p .claude/commands
-cp /path/to/marshroom/.claude/commands/start-issue.md .claude/commands/
-cp /path/to/marshroom/.claude/commands/create-pr.md .claude/commands/
-cp /path/to/marshroom/.claude/commands/validate-pr.md .claude/commands/
+npx skills add https://github.com/vkehfdl1/Marshroom/tree/main/marshroom-skills
 ```
 
 Skills need to be installed in **each project** you want to use them in.
