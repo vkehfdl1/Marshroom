@@ -360,9 +360,9 @@ Commands:
 
 State file: ~/.config/marshroom/state.json
 
-tmux integration:
-  set -g status-right '#(marsh hud) | %H:%M'
-  set -g status-interval 5
+tmux integration (tpm):
+  set -g @plugin 'vkehfdl1/Marshroom'
+  set -g status-right '#{marshroom_status} | %H:%M'
 
 Examples:
   marsh hud              # tmux status bar output

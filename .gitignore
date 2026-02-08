@@ -36,3 +36,5 @@ Packages/
 # Environment
 .env
 *.pem
+
+.claude/settings.local.json
