@@ -12,6 +12,7 @@ marshroom_status_interval=$(get_tmux_option "@marshroom_interval" "5")
 marshroom_status_right_length=$(get_tmux_option "@marshroom_status_right_length" "80")
 marshroom_open_ide_key=$(get_tmux_option "@marshroom_open_ide_key" "P")
 marshroom_status_key=$(get_tmux_option "@marshroom_status_key" "I")
+marshroom_pane_format=$(get_tmux_option "@marshroom_pane_format" " #{marshroom_status} | #P: #{b:pane_current_path} ")
 
 # ─── Status bar interpolation ────────────────────────────────────────
 
@@ -48,6 +49,9 @@ update_tmux_option "status-left"
 
 # ─── Settings ────────────────────────────────────────────────────────
 
+# Pane border: plugin sets format directly (user overrides via @marshroom_pane_format)
+set_tmux_option "pane-border-status" "top"
+set_tmux_option "pane-border-format" "$(do_interpolation "$marshroom_pane_format")"
 set_tmux_option "status-interval" "$marshroom_status_interval"
 set_tmux_option "status-right-length" "$marshroom_status_right_length"
 

@@ -20,19 +20,22 @@ struct MallView: View {
                 )
             }
         } detail: {
-            VStack(spacing: 0) {
-                if let repo = selectedRepo, let issue = selectedIssue {
-                    IssueDetailView(repo: repo, issue: issue)
-                } else {
-                    ContentUnavailableView(
-                        "Select an Issue",
-                        systemImage: "doc.text",
-                        description: Text("Choose an issue from the list to view details")
-                    )
+            VSplitView {
+                Group {
+                    if let repo = selectedRepo, let issue = selectedIssue {
+                        IssueDetailView(repo: repo, issue: issue)
+                    } else {
+                        ContentUnavailableView(
+                            "Select an Issue",
+                            systemImage: "doc.text",
+                            description: Text("Choose an issue from the list to view details")
+                        )
+                    }
                 }
-                Divider()
+                .frame(minHeight: 150)
+
                 CartView()
-                    .frame(height: 250)
+                    .frame(minHeight: 150)
             }
         }
         .navigationSplitViewStyle(.balanced)

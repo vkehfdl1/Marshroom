@@ -84,7 +84,8 @@ tmux source-file ~/.tmux.conf
 ```
 
 This adds:
-- **Status bar HUD** — `#{marshroom_status}` shows the current issue and status, refreshes every 5 seconds
+- **Status bar HUD** — `#{marshroom_status}` in `status-right` shows the current issue and status, refreshes every 5 seconds
+- **Per-pane border HUD** — the plugin automatically sets `pane-border-status top` and `pane-border-format` so each tmux pane shows its own issue based on the pane's working directory. No manual configuration needed.
 - **Prefix + P** — opens PyCharm for the current pane's repo
 - **Prefix + I** — pops up the issue status for the current repo
 
@@ -95,6 +96,8 @@ set -g @marshroom_interval 5              # Status refresh interval (seconds)
 set -g @marshroom_status_right_length 80  # Max width for status-right
 set -g @marshroom_open_ide_key P          # Keybinding for PyCharm
 set -g @marshroom_status_key I            # Keybinding for status popup
+set -g @marshroom_pane_format " #{marshroom_status} | #P: #{b:pane_current_path} "
+                                          # Custom pane border format (default shown)
 ```
 
 ## 4. Getting Started
@@ -210,7 +213,7 @@ The main window is a three-column layout:
 |--------|---------|
 | **Sidebar** | Your highlighted repositories |
 | **Content** | Issue list for the selected repo + inline composer |
-| **Detail** | Issue detail (top) + Cart (bottom) |
+| **Detail** | Issue detail (top) + Cart (bottom), 50/50 split with draggable divider |
 
 - Select a repo in the sidebar to browse its open issues.
 - Click an issue to view its full description in the detail panel.
@@ -243,17 +246,23 @@ The cart view groups items by status: Running first, then Pending, then Soon.
 
 ### Terminal HUD
 
-The tmux status bar shows the current issue for whichever repo your active tmux pane is in.
+The tmux status bar and pane borders show the current issue for whichever repo the pane is in. The HUD uses **branch-aware three-tier resolution** to determine which issue to display:
 
-**Display format:**
+1. **Branch match** — if the current git branch matches a cart entry's `branchName` (e.g., `Feature/#42`), that issue is shown. This naturally handles multiple worktrees and clones.
+2. **Single entry or lone runner** — if no branch matches, shows the single cart entry for the repo, or the sole `running` entry if exactly one exists.
+3. **Summary mode** — if multiple entries exist with no clear winner, shows a task count summary.
+
+**Display formats:**
 ```
-🍄 #42 Fix SSO login with MFA [Running] | owner/repo
+🍄 #42 Fix SSO login with MFA [Running] | owner/repo        (single issue)
+🍄 3 tasks (1 running, 2 soon) | owner/repo                  (summary mode)
 ```
 
 - Color-coded by status (green = running, blue = pending, yellow = soon)
 - Truncates titles longer than 30 characters
-- Falls back to "No active issue" when no cart entries match the current repo
+- Falls back to "No tasks" when no cart entries match the current repo
 - Refreshes every 5 seconds
+- **Per-pane display**: each tmux pane border shows the issue for that pane's directory, so split panes in different repos each show their own issue
 
 ### Quick Actions (marsh CLI)
 
@@ -346,8 +355,9 @@ The Marshroom tpm plugin supports these options (set before the `run` line in `.
 | `@marshroom_status_right_length` | `80` | Max width for status-right |
 | `@marshroom_open_ide_key` | `P` | Keybinding for PyCharm (prefix + key) |
 | `@marshroom_status_key` | `I` | Keybinding for status popup (prefix + key) |
+| `@marshroom_pane_format` | `" #{marshroom_status} \| #P: #{b:pane_current_path} "` | Pane border format (auto-set by plugin) |
 
-Use `#{marshroom_status}` in `status-right` or `status-left` to place the HUD.
+Use `#{marshroom_status}` in `status-right` or `status-left` to place the HUD in the global status bar. The pane border format is set automatically by the plugin — override it with `@marshroom_pane_format` if needed.
 
 ## 8. CLI Reference
 
@@ -375,13 +385,13 @@ If multiple cart entries exist for the current repo and no issue number is provi
 
 ### marsh status
 
-Display all cart entries for the current repo.
+Display all cart entries for the current repo. The entry matching the current git branch is marked with a `→` arrow.
 
 ```bash
 marsh status
 # 🍄 Marshroom — owner/repo
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#   #42 Fix SSO login with MFA
+# → #42 Fix SSO login with MFA
 #     Status: running | Branch: HotFix/#42
 #
 #   #55 Add dark mode support

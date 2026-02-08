@@ -225,10 +225,10 @@ MarshroomApp
 │           ├── content: IssueListView
 │           │   ├── IssueComposerView (collapsible, toolbar toggle)
 │           │   └── ForEach → IssueRowView
-│           └── detail: VStack
-│               ├── IssueDetailView (top, scrollable)
+│           └── detail: VSplitView (50/50, draggable divider)
+│               ├── IssueDetailView (top, scrollable, minHeight 150)
 │               │   └── FlowLayout (labels)
-│               └── CartView (bottom, fixed 250pt)
+│               └── CartView (bottom, minHeight 150)
 │                   └── Sections: Running → Pending → Soon
 │                       └── CartItemView
 │
@@ -551,9 +551,9 @@ select(
 
 | Command | Reads state | Writes state | Description |
 |---------|-------------|--------------|-------------|
-| `hud` | Yes | No | Output tmux-formatted status string. Prioritizes: running > soon > pending. Truncates title to 30 chars. |
+| `hud` | Yes | No | Output tmux-formatted status string. Uses branch-aware three-tier resolution: (1) branch match, (2) single entry or sole runner, (3) summary mode. Truncates title to 30 chars. |
 | `start [#N]` | Yes | Yes (status→running) | Interactive pick if multiple entries. Strips leading `#` from argument. |
-| `status` | Yes | No | Pretty-prints all cart entries for current repo. |
+| `status` | Yes | No | Pretty-prints all cart entries for current repo. Marks the entry matching the current branch with `→`. |
 | `open-ide` | No | No | Tries PyCharm Professional → CE → PyCharm → `pycharm` CLI. |
 | `pr` | Yes | Yes (status→pending, prNumber, prURL) | Matches by branch name. Uses `gh pr view` to capture PR info. |
 
@@ -573,25 +573,27 @@ echo "$updated" | write_state
 
 ### 6.6 tmux Integration
 
-Configuration file at `cli/tmux-marshroom.conf`:
+Marshroom integrates with tmux via a tpm plugin (`marshroom.tmux`). The plugin:
 
-```bash
-# Status bar (refreshes every 5 seconds)
-set -g status-right '#(marsh hud) | %H:%M '
-set -g status-right-length 80
-set -g status-interval 5
+1. **Interpolates** `#{marshroom_status}` in `status-right` and `status-left` with the actual status script call
+2. **Auto-sets** `pane-border-status top` and `pane-border-format` so each pane shows its own issue (user overrides via `@marshroom_pane_format`)
+3. **Binds keys** for IDE opening and status popups
 
-# Keybindings
-bind-key P run-shell "marsh open-ide"       # prefix + P → open PyCharm
-bind-key I display-popup -E "marsh status"  # prefix + I → status popup
+Since `pane-border-format` evaluates `#{pane_current_path}` per-pane, each pane in a split resolves to its own repo/issue independently.
+
+HUD output formats:
 ```
-
-HUD output format:
-```
-#[fg=green]🍄#[fg=default] #123 Add dark mode [Running] | owner/repo
+#[fg=green]🍄#[fg=default] #123 Add dark mode [Running] | owner/repo     (single issue)
+#[fg=yellow]🍄#[fg=default] 3 tasks (1 running, 2 soon) | owner/repo     (summary mode)
 ```
 
 Color mapping: soon=yellow, running=green, pending=blue, completed=colour244.
+
+#### HUD Resolution (Three-Tier)
+
+1. **Branch match**: `git branch --show-current` matches a cart entry's `branchName` → show that issue
+2. **Single entry or lone runner**: no branch match → show single entry if count==1, or the sole `running` entry
+3. **Summary mode**: multiple entries, no clear winner → show task count breakdown
 
 ---
 

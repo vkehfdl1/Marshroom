@@ -108,13 +108,44 @@ cmd_hud() {
     return 0
   fi
 
-  # Prefer running, then soon, then pending, then first
-  local entry
-  entry=$(echo "$entries" | jq '
-    (map(select(.status == "running")) | first // null) //
-    (map(select(.status == "soon"))    | first // null) //
-    (map(select(.status == "pending")) | first // null) //
-    first')
+  # Tier 1: Match current branch to a cart entry's branchName
+  local branch entry=""
+  branch=$(git branch --show-current 2>/dev/null) || branch=""
+
+  if [[ -n "$branch" ]]; then
+    entry=$(echo "$entries" | jq --arg b "$branch" '
+      map(select((.branchName // "") == $b)) | first // null')
+    [[ "$entry" == "null" ]] && entry=""
+  fi
+
+  # Tier 2: Single entry or sole runner
+  if [[ -z "$entry" ]]; then
+    if [[ "$count" -eq 1 ]]; then
+      entry=$(echo "$entries" | jq 'first')
+    else
+      local running_count
+      running_count=$(echo "$entries" | jq '[.[] | select(.status == "running")] | length')
+      if [[ "$running_count" -eq 1 ]]; then
+        entry=$(echo "$entries" | jq '[.[] | select(.status == "running")] | first')
+      fi
+    fi
+  fi
+
+  # Tier 3: Summary mode — multiple entries, no clear winner
+  if [[ -z "$entry" ]]; then
+    local running soon pending
+    running=$(echo "$entries" | jq '[.[] | select(.status == "running")] | length')
+    soon=$(echo "$entries" | jq '[.[] | select(.status == "soon")] | length')
+    pending=$(echo "$entries" | jq '[.[] | select(.status == "pending")] | length')
+    local parts=()
+    [[ "$running" -gt 0 ]] && parts+=("${running} running")
+    [[ "$soon" -gt 0 ]]    && parts+=("${soon} soon")
+    [[ "$pending" -gt 0 ]] && parts+=("${pending} pending")
+    local summary
+    summary=$(IFS=', '; echo "${parts[*]}")
+    echo "#[fg=yellow]🍄#[fg=default] ${count} tasks (${summary}) | ${owner_repo}"
+    return 0
+  fi
 
   local num title status color label
   num=$(echo "$entry" | jq -r '.issueNumber')
@@ -235,8 +266,12 @@ cmd_status() {
     return 0
   fi
 
-  echo "$entries" | jq -r '.[] |
-    "  #\(.issueNumber) \(.issueTitle)\n    Status: \(.status // "soon") | Branch: \(.branchName // "—")\(.prURL // "" | if . != "" then "\n    PR: \(.)" else "" end)\n"'
+  local current_branch
+  current_branch=$(git branch --show-current 2>/dev/null) || current_branch=""
+
+  echo "$entries" | jq -r --arg cb "$current_branch" '.[] |
+    (if (.branchName // "") == $cb and $cb != "" then "→ " else "  " end) +
+    "#\(.issueNumber) \(.issueTitle)\n    Status: \(.status // "soon") | Branch: \(.branchName // "—")\(.prURL // "" | if . != "" then "\n    PR: \(.)" else "" end)\n"'
 }
 
 cmd_open_ide() {

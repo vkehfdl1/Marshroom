@@ -35,9 +35,9 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configurati
 - **Settings**: General, Repos, AI (Anthropic API key)
 
 ### 2. CLI Tool (cli/marsh)
-- `marsh hud` — tmux status bar output (current repo/issue/status)
+- `marsh hud` — tmux status bar + pane border output; branch-aware three-tier resolution (branch match → single/sole runner → summary)
 - `marsh start [#N]` — set cart item status to "running"
-- `marsh status` — show cart items for current repo
+- `marsh status` — show cart items for current repo (marks current branch with `→`)
 - `marsh open-ide` — open PyCharm for current directory
 - `marsh pr` — set status to "pending", store PR number/URL
 - Reads/writes `~/.config/marshroom/state.json` atomically
