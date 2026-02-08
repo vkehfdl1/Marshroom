@@ -4,7 +4,7 @@ Agent skills for [Claude Code](https://claude.com/claude-code) that integrate wi
 
 ## What is Marshroom?
 
-Marshroom is a macOS developer productivity tool that uses GitHub Issues as the Single Source of Truth (SSOT). It manages a cart of issues labeled `todo-today` and provides a bridge between the macOS app and Claude Code via `~/.config/marshroom/state.json`.
+Marshroom is a macOS developer productivity tool that uses GitHub Issues as the Single Source of Truth (SSOT). It manages a cart of issues via `~/.config/marshroom/state.json`, which serves as the bridge between the macOS app, CLI, and Claude Code.
 
 ## Skills
 
@@ -37,10 +37,10 @@ cp /tmp/marshroom-skills/skills/create-pr/SKILL.md .claude/commands/create-pr.md
 cp /tmp/marshroom-skills/skills/validate-pr/SKILL.md .claude/commands/validate-pr.md
 ```
 
-Or use the installer script from the Marshroom app:
+Or use the installer script included in this package:
 
 ```bash
-bash /path/to/marshroom/Skills/install-skill.sh
+bash /path/to/marshroom/marshroom-skills/scripts/install-skill.sh
 ```
 
 ## Prerequisites
@@ -60,7 +60,7 @@ Draft → Inject → Execute → Review → Ship
 
 ### 1. Draft (Status: `soon`)
 
-Pick issues in the Marshroom macOS app. Add the `todo-today` label to queue them in your cart.
+Pick issues in the Marshroom macOS app. Click the cart icon to add them to your cart.
 
 ### 2. Inject (Status: `running`)
 

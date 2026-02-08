@@ -46,7 +46,7 @@ npx skills add marshroom/marshroom-skills
 
 ```bash
 cd /path/to/your-project
-bash /path/to/marshroom/Skills/install-skill.sh
+bash /path/to/marshroom/marshroom-skills/scripts/install-skill.sh
 ```
 
 **Option C — Manual copy:**
@@ -122,7 +122,7 @@ For each project you work on:
 
 ```bash
 cd ~/projects/my-repo
-bash /path/to/marshroom/Skills/install-skill.sh
+bash /path/to/marshroom/marshroom-skills/scripts/install-skill.sh
 ```
 
 This copies `start-issue.md`, `create-pr.md`, and `validate-pr.md` into `.claude/commands/`.
@@ -143,7 +143,7 @@ Open Marshroom. Select a repository in the sidebar, then use the **New Issue** c
 2. Press **Cmd+Enter** (or click **Generate Title**). The AI generates a clean issue title using Claude.
 3. Edit the title if needed, then click **Create Issue**.
 
-The issue is created on GitHub. To add it to your cart, click the cart icon on any issue — this adds the `todo-today` label and assigns it to you. The cart entry starts with status `soon`.
+The issue is created on GitHub. To add it to your cart, click the cart icon on any issue. The cart entry is saved to `state.json` with status `soon`.
 
 ### Step 2: Inject (Status: `running`)
 
@@ -212,7 +212,7 @@ The main window is a three-column layout:
 
 - Select a repo in the sidebar to browse its open issues.
 - Click an issue to view its full description in the detail panel.
-- The **cart icon** on each issue toggles the `todo-today` label.
+- The **cart icon** on each issue adds or removes it from your local cart.
 - Issues in your cart show a status badge (Soon / Running / Pending).
 
 ### Smart Ingestion (AI Title Generation)
@@ -447,7 +447,7 @@ gh auth status   # Verify
 **Fix:** Skills must be installed per-project:
 ```bash
 cd /path/to/your-project
-bash /path/to/marshroom/Skills/install-skill.sh
+bash /path/to/marshroom/marshroom-skills/scripts/install-skill.sh
 ```
 
 Verify `.claude/commands/start-issue.md` exists in the project root.
@@ -461,11 +461,11 @@ Verify `.claude/commands/start-issue.md` exists in the project root.
 2. Source the config: add `source-file /path/to/tmux-marshroom.conf` to `~/.tmux.conf`
 3. Reload: `tmux source-file ~/.tmux.conf`
 
-### Cart is empty even though issues have the label
+### Cart is empty after relaunch
 
-**Symptom:** Issues have the `todo-today` label on GitHub but don't appear in the Marshroom cart.
+**Symptom:** Issues you added to the cart are gone after relaunching Marshroom.
 
-**Fix:** Cart requires both the `todo-today` label AND the issue must be assigned to you. Assign yourself on GitHub or via the Marshroom app.
+**Fix:** Cart state is persisted in `~/.config/marshroom/state.json`. If the file is missing or corrupted, the cart will be empty. Make sure Marshroom.app wrote the file (check with `cat ~/.config/marshroom/state.json | jq .cart`).
 
 ### Branch name format
 

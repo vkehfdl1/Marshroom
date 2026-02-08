@@ -4,7 +4,7 @@ Marshroom is a macOS developer productivity tool that uses GitHub Issues as the 
 
 ## How It Works
 
-Marshroom manages a **cart** of GitHub issues tagged with the `todo-today` label. The macOS app tracks these issues and writes their state to `~/.config/marshroom/state.json`, which these skills read to understand the current task context.
+Marshroom manages a **cart** of GitHub issues. The macOS app tracks these issues and writes their state to `~/.config/marshroom/state.json`, which these skills read to understand the current task context.
 
 ## The GOAT Flow
 

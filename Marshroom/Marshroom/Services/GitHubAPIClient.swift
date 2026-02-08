@@ -72,20 +72,6 @@ actor GitHubAPIClient {
         return text
     }
 
-    // MARK: - Labels
-
-    func addLabel(repo: String, issueNumber: Int, labels: [String]) async throws {
-        struct AddLabelsBody: Encodable {
-            let labels: [String]
-        }
-        let payload = AddLabelsBody(labels: labels)
-        let _: [GitHubLabel] = try await request(
-            endpoint: "/repos/\(repo)/issues/\(issueNumber)/labels",
-            method: "POST",
-            body: payload
-        )
-    }
-
     // MARK: - Internal
 
     private func request<T: Decodable>(

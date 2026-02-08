@@ -61,7 +61,7 @@ soon → running → pending → completed
 
 | Status | Meaning | Set By |
 |--------|---------|--------|
-| `soon` | In cart, not yet started. Default when an issue is added to cart. | Marshroom app (when adding `todo-today` label) |
+| `soon` | In cart, not yet started. Default when an issue is added to cart. | Marshroom app (when adding to cart) |
 | `running` | Claude Code is actively working on this issue. | `marsh start #N` or `/start-issue` skill |
 | `pending` | PR created, awaiting review. | `marsh pr` or `/create-pr` skill |
 | `completed` | Issue closed or PR merged. Entry is removed from cart after detection. | Marshroom poller (detects issue closure) |

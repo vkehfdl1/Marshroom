@@ -20,10 +20,6 @@ struct GitHubIssue: Codable, Identifiable, Hashable {
 
     var isPullRequest: Bool { pullRequest != nil }
 
-    func isAssigned(to login: String) -> Bool {
-        assignees.contains { $0.login == login }
-    }
-
     enum CodingKeys: String, CodingKey {
         case id, number, title, body, state, labels, user, assignees
         case htmlURL = "html_url"

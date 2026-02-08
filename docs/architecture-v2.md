@@ -108,7 +108,7 @@ actor AnthropicClient {
 Add methods:
 - `createIssue(repo:, title:, body:) async throws -> GitHubIssue` — POST /repos/{owner}/{repo}/issues
 - `fetchFileContent(repo:, path:) async throws -> String` — GET /repos/{owner}/{repo}/contents/{path} (for CLAUDE.md)
-- `addLabel(repo:, issueNumber:, label:) async throws` — POST labels
+- ~~`addLabel`~~ — removed (cart is managed locally via state.json)
 
 #### Updated: `GitHubPoller`
 - Detect PR creation for running issues → update status to `pending`
@@ -324,7 +324,7 @@ marsh open-ide
 | `Core/StateFileManager.swift` | v2→v3 migration, backward compat |
 | `Core/SettingsStorage.swift` | Anthropic API key setting |
 | `Core/Constants.swift` | Anthropic API URL, cache TTL |
-| `Services/GitHubAPIClient.swift` | createIssue, fetchFileContent, addLabel methods |
+| `Services/GitHubAPIClient.swift` | createIssue, fetchFileContent methods |
 | `Services/GitHubPoller.swift` | Status transition detection, CLAUDE.md refresh |
 | `Services/KeychainService.swift` | Anthropic key support |
 | `Features/Mall/IssueListView.swift` | Composer integration, status badges |

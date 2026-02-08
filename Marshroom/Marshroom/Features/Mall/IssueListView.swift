@@ -11,51 +11,54 @@ struct IssueListView: View {
     }
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
+            // Inline action buttons — always visible when repo is selected
+            HStack {
+                Spacer()
+                Button {
+                    showComposer.toggle()
+                } label: {
+                    Image(systemName: showComposer ? "minus.circle" : "plus.circle")
+                }
+                .help(showComposer ? "Hide composer" : "New issue")
+
+                Button {
+                    Task { await appState.refreshIssues(for: repo.fullName) }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+
+            // Composer — always reachable, outside the empty/non-empty conditional
+            if showComposer {
+                IssueComposerView(repo: repo)
+                Divider()
+            }
+
+            // Content: loading / empty / list
             if appState.isLoading && issues.isEmpty {
                 ProgressView("Loading issues...")
+                    .frame(maxHeight: .infinity)
             } else if issues.isEmpty {
                 ContentUnavailableView(
                     "No Open Issues",
                     systemImage: "checkmark.circle",
                     description: Text("This repository has no open issues")
                 )
+                .frame(maxHeight: .infinity)
             } else {
-                VStack(spacing: 0) {
-                    if showComposer {
-                        IssueComposerView(repo: repo)
-                        Divider()
+                List(selection: $selectedIssue) {
+                    ForEach(issues) { issue in
+                        IssueRowView(repo: repo, issue: issue)
+                            .tag(issue)
                     }
-
-                    List(selection: $selectedIssue) {
-                        ForEach(issues) { issue in
-                            IssueRowView(repo: repo, issue: issue)
-                                .tag(issue)
-                        }
-                    }
-                    .listStyle(.inset)
                 }
+                .listStyle(.inset)
             }
         }
         .navigationTitle(repo.name)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                HStack {
-                    Button {
-                        showComposer.toggle()
-                    } label: {
-                        Image(systemName: showComposer ? "minus.circle" : "plus.circle")
-                    }
-                    .help(showComposer ? "Hide composer" : "New issue")
-
-                    Button {
-                        Task { await appState.refreshIssues(for: repo.fullName) }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-            }
-        }
         .task(id: repo.fullName) {
             await appState.refreshIssues(for: repo.fullName)
         }

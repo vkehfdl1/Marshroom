@@ -28,17 +28,6 @@ struct GitHubIssueBranchNameTests {
         #expect(issue.branchName == "HotFix/#3")
     }
 
-    @Test("isAssigned(to:) returns true for matching login")
-    func isAssigned() {
-        let issue = makeIssue(
-            number: 1,
-            title: "Test",
-            assignees: [GitHubIssue.User(login: "me", avatarURL: "")]
-        )
-        #expect(issue.isAssigned(to: "me"))
-        #expect(!issue.isAssigned(to: "other"))
-    }
-
     private func makeIssue(
         number: Int,
         title: String,

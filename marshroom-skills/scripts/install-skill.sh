@@ -9,9 +9,10 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MARSHROOM_ROOT="$(dirname "$SCRIPT_DIR")"
+PACKAGE_ROOT="$(dirname "$SCRIPT_DIR")"
+MARSHROOM_ROOT="$(dirname "$PACKAGE_ROOT")"
 COMMANDS_SOURCE="$MARSHROOM_ROOT/.claude/commands"
-SKILLS_SOURCE="$MARSHROOM_ROOT/marshroom-skills/skills"
+SKILLS_SOURCE="$PACKAGE_ROOT/skills"
 TARGET_DIR=".claude/commands"
 
 echo "Marshroom Skill Installer"
@@ -47,9 +48,9 @@ for skill in "${SKILLS[@]}"; do
 done
 
 # Also copy state-schema reference if available
-if [ -f "$MARSHROOM_ROOT/marshroom-skills/references/state-schema.md" ]; then
+if [ -f "$PACKAGE_ROOT/references/state-schema.md" ]; then
     mkdir -p "$TARGET_DIR/../references"
-    cp "$MARSHROOM_ROOT/marshroom-skills/references/state-schema.md" "$TARGET_DIR/../references/state-schema.md"
+    cp "$PACKAGE_ROOT/references/state-schema.md" "$TARGET_DIR/../references/state-schema.md"
     echo "  Installed: .claude/references/state-schema.md"
 fi
 

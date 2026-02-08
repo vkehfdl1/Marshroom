@@ -7,7 +7,7 @@ struct SkillSetupView: View {
 
     private let installCommand = """
     # From your project root:
-    curl -fsSL https://raw.githubusercontent.com/your-org/marshroom/main/Skills/install-skill.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/your-org/marshroom/main/marshroom-skills/scripts/install-skill.sh | bash
     """
 
     var body: some View {
@@ -56,7 +56,7 @@ struct SkillSetupView: View {
             }
             .frame(maxWidth: 400)
 
-            Text("You can also copy the files manually from the Skills/ directory.")
+            Text("You can also copy the files manually from the marshroom-skills/skills/ directory.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

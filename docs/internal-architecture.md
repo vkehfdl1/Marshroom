@@ -4,13 +4,13 @@
 
 ## 1. System Overview
 
-Marshroom is a macOS developer productivity tool that uses **GitHub Issues as the Single Source of Truth (SSOT)**. It manages a cart of issues labeled `todo-today` and orchestrates work across three pillars:
+Marshroom is a macOS developer productivity tool that uses **GitHub Issues as the Single Source of Truth (SSOT)**. It manages a cart of issues via `state.json` and orchestrates work across three pillars:
 
 ```
                           ┌──────────────────────┐
                           │      GitHub API       │
                           │   (Issues, Repos,     │
-                          │    Labels, Files)      │
+                          │    Files)              │
                           └──────────┬─────────────┘
                                      │
                     ┌────────────────┼────────────────┐
@@ -43,7 +43,7 @@ Draft → Inject → Execute → Review → Ship
 (soon)  (running)          (pending) (completed)
 ```
 
-1. **Draft** — User picks issues in the macOS app (adds `todo-today` label)
+1. **Draft** — User picks issues in the macOS app (adds to cart via state.json)
 2. **Inject** — `/start-issue` creates a branch, injects context, sets status to `running`
 3. **Execute** — Developer/AI works on the issue with full context
 4. **Review** — `/create-pr` creates PR with `Closes #N`, sets status to `pending`
@@ -268,8 +268,6 @@ actor GitHubAPIClient {
 | `getIssue(repo:number:)` | `GET /repos/{owner}/{repo}/issues/{number}` | Single issue (for polling) |
 | `createIssue(repo:title:body:)` | `POST /repos/{owner}/{repo}/issues` | Create issue from composer |
 | `fetchFileContent(repo:path:)` | `GET /repos/{owner}/{repo}/contents/{path}` | Fetch CLAUDE.md (base64 decoded) |
-| `addLabel(repo:issueNumber:labels:)` | `POST /repos/{owner}/{repo}/issues/{number}/labels` | Add labels |
-
 All requests include:
 - `Authorization: Bearer {pat}`
 - `Accept: application/vnd.github+json`
@@ -683,6 +681,8 @@ marshroom-skills/
 │   ├── start-issue/SKILL.md        # /start-issue instructions
 │   ├── create-pr/SKILL.md          # /create-pr instructions
 │   └── validate-pr/SKILL.md        # /validate-pr instructions
+├── scripts/
+│   └── install-skill.sh            # Installer script for project setup
 ├── references/
 │   └── state-schema.md             # state.json v3 schema documentation
 └── README.md                       # Installation + usage guide
@@ -767,7 +767,7 @@ GitHubIssue
 
 | Dependency | Used By | Purpose |
 |------------|---------|---------|
-| GitHub REST API v3 | macOS App, Skills (via `gh`) | Issue CRUD, repo search, file content, labels |
+| GitHub REST API v3 | macOS App, Skills (via `gh`) | Issue CRUD, repo search, file content |
 | Anthropic Messages API | macOS App (`AnthropicClient`) | Issue title generation (Claude Haiku) |
 | `gh` CLI | Skills (`/create-pr`, `/validate-pr`) | PR creation, PR view/edit |
 | `git` CLI | Skills, `marsh` CLI | Branch operations, remote detection |

@@ -7,8 +7,7 @@ Multi-Repo Execution Catalyst — a macOS developer cockpit that uses GitHub Iss
 ```
 Marshroom/              — Xcode app (SwiftUI + AppKit, macOS 14.0+)
 cli/                    — marsh CLI tool (shell script) + tmux config
-marshroom-skills/       — Vercel Agent Skills package (npx skills add)
-Skills/                 — Skill installation utilities
+marshroom-skills/       — Vercel Agent Skills package (npx skills add) + installer script
 .claude/commands/       — Claude Code skills (start-issue, create-pr, validate-pr)
 docs/                   — Architecture & user documentation
 ```
