@@ -25,3 +25,4 @@ Steps:
     - Branch: {branchName}
     - Repository: {repoFullName}
     - Status: running
+13. Ask the user permission to start planning to resolve issue. If the user allows it, starts planning using /plan mode.
