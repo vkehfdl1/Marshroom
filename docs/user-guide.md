@@ -58,25 +58,44 @@ Verify:
 marsh help
 ```
 
-### Configure tmux
+### Configure tmux (tpm plugin)
 
-Source the Marshroom tmux config in your `.tmux.conf`:
+First, install [tpm](https://github.com/tmux-plugins/tpm) if you haven't:
 
 ```bash
-# In ~/.tmux.conf
-source-file /path/to/marshroom/cli/tmux-marshroom.conf
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
 
-Then reload tmux:
+Then add to your `~/.tmux.conf`:
+
+```bash
+# Marshroom plugin
+set -g @plugin 'vkehfdl1/Marshroom'
+set -g status-right '#{marshroom_status} | %H:%M'
+
+# Initialize tpm (keep at the very bottom)
+run '~/.tmux/plugins/tpm/tpm'
+```
+
+Press **prefix + I** in tmux to install, or reload:
 
 ```bash
 tmux source-file ~/.tmux.conf
 ```
 
 This adds:
-- **Status bar HUD** — shows the current issue and status, refreshes every 5 seconds
+- **Status bar HUD** — `#{marshroom_status}` shows the current issue and status, refreshes every 5 seconds
 - **Prefix + P** — opens PyCharm for the current pane's repo
 - **Prefix + I** — pops up the issue status for the current repo
+
+Optional plugin options (add before the `run` line):
+
+```bash
+set -g @marshroom_interval 5              # Status refresh interval (seconds)
+set -g @marshroom_status_right_length 80  # Max width for status-right
+set -g @marshroom_open_ide_key P          # Keybinding for PyCharm
+set -g @marshroom_status_key I            # Keybinding for status popup
+```
 
 ## 4. Getting Started
 
@@ -317,18 +336,18 @@ This file is the bridge between the macOS app and all external tools (Claude Cod
 }
 ```
 
-### tmux config options
+### tmux plugin options
 
-The `tmux-marshroom.conf` file sets:
+The Marshroom tpm plugin supports these options (set before the `run` line in `.tmux.conf`):
 
-```bash
-set -g status-right '#(marsh hud) | %H:%M '   # HUD in status bar
-set -g status-right-length 80                   # Prevent truncation
-set -g status-interval 5                        # Refresh every 5 seconds
+| Option | Default | Description |
+|--------|---------|-------------|
+| `@marshroom_interval` | `5` | Status bar refresh interval (seconds) |
+| `@marshroom_status_right_length` | `80` | Max width for status-right |
+| `@marshroom_open_ide_key` | `P` | Keybinding for PyCharm (prefix + key) |
+| `@marshroom_status_key` | `I` | Keybinding for status popup (prefix + key) |
 
-bind-key P run-shell "marsh open-ide"           # Prefix+P → PyCharm
-bind-key I display-popup -E "marsh status"      # Prefix+I → Status popup
-```
+Use `#{marshroom_status}` in `status-right` or `status-left` to place the HUD.
 
 ## 8. CLI Reference
 
@@ -440,9 +459,11 @@ Verify `.claude/commands/start-issue.md` exists in the project root.
 **Symptom:** The tmux status bar doesn't show the Marshroom HUD.
 
 **Fix:**
-1. Ensure `marsh` is in your PATH: `which marsh`
-2. Source the config: add `source-file /path/to/tmux-marshroom.conf` to `~/.tmux.conf`
-3. Reload: `tmux source-file ~/.tmux.conf`
+1. Ensure tpm is installed: `ls ~/.tmux/plugins/tpm`
+2. Ensure the plugin line is in `.tmux.conf`: `set -g @plugin 'vkehfdl1/Marshroom'`
+3. Ensure `#{marshroom_status}` is in your `status-right` or `status-left`
+4. Install plugins: press **prefix + I** in tmux
+5. Reload: `tmux source-file ~/.tmux.conf`
 
 ### Cart is empty after relaunch
 
