@@ -21,6 +21,8 @@ final class AppStateManager {
     private(set) var apiClient: GitHubAPIClient?
     private(set) var anthropicClient: AnthropicClient?
     private var poller: GitHubPoller?
+    private var fileWatcherSource: DispatchSourceFileSystemObject?
+    private var lastSelfWriteTime: Date = .distantPast
 
     // CLAUDE.md cache (repo fullName → content)
     private var claudeMdCacheStore: [String: String] = [:]
@@ -248,6 +250,7 @@ final class AppStateManager {
     // MARK: - State File
 
     func syncStateFile() {
+        lastSelfWriteTime = Date()
         let existingState = StateFileManager.readState()
         let state = StateFileManager.buildState(
             cart: todayCart,
@@ -255,6 +258,96 @@ final class AppStateManager {
             existingState: existingState
         )
         try? StateFileManager.writeState(state)
+    }
+
+    // MARK: - File Watcher
+
+    func startFileWatcher() {
+        stopFileWatcher()
+
+        let dirPath = Constants.stateFileDirectory
+        let fd = open(dirPath, O_EVTONLY)
+        guard fd >= 0 else { return }
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: .write,
+            queue: .global()
+        )
+
+        source.setEventHandler { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.handleExternalStateChange()
+            }
+        }
+
+        source.setCancelHandler {
+            close(fd)
+        }
+
+        fileWatcherSource = source
+        source.resume()
+    }
+
+    func stopFileWatcher() {
+        fileWatcherSource?.cancel()
+        fileWatcherSource = nil
+    }
+
+    private func handleExternalStateChange() {
+        // Ignore changes triggered by our own writes
+        guard Date().timeIntervalSince(lastSelfWriteTime) > 1.0 else { return }
+
+        guard let state = StateFileManager.readState() else { return }
+
+        // Build lookup from state.json cart entries
+        var stateEntries: [String: MarshroomState.CartEntry] = [:]
+        for entry in state.cart {
+            stateEntries["\(entry.repoFullName)#\(entry.issueNumber)"] = entry
+        }
+
+        // Update existing items and detect removals
+        var updatedCart: [CartItem] = []
+        for var item in todayCart {
+            let key = item.id
+            if let entry = stateEntries.removeValue(forKey: key) {
+                item.status = entry.status
+                updatedCart.append(item)
+            }
+            // If not in state file, item was removed externally — drop it
+        }
+
+        // Add new items that appeared in state.json (added by CLI or another source)
+        for (_, entry) in stateEntries {
+            let repo = GitHubRepo(
+                id: 0,
+                name: entry.repoFullName.components(separatedBy: "/").last ?? entry.repoFullName,
+                fullName: entry.repoFullName,
+                owner: GitHubRepo.Owner(login: entry.repoFullName.components(separatedBy: "/").first ?? "", avatarURL: ""),
+                htmlURL: "https://github.com/\(entry.repoFullName)",
+                cloneURL: entry.repoCloneURL,
+                sshURL: entry.repoSSHURL,
+                description: nil,
+                isPrivate: false
+            )
+            let issue = GitHubIssue(
+                id: 0,
+                number: entry.issueNumber,
+                title: entry.issueTitle,
+                body: entry.issueBody,
+                state: "open",
+                labels: [],
+                htmlURL: "https://github.com/\(entry.repoFullName)/issues/\(entry.issueNumber)",
+                user: GitHubIssue.User(login: "", avatarURL: ""),
+                assignees: [],
+                createdAt: "",
+                updatedAt: "",
+                pullRequest: nil
+            )
+            updatedCart.append(CartItem(repo: repo, issue: issue, status: entry.status))
+        }
+
+        todayCart = updatedCart
     }
 
     // MARK: - Polling

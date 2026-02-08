@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        appState?.stopFileWatcher()
         appState?.stopPolling()
     }
 
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             await appState.restoreCurrentUser()
             appState.startPolling()
+            appState.startFileWatcher()
         }
     }
 
@@ -41,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             await appState.restoreCurrentUser()
             appState.startPolling()
+            appState.startFileWatcher()
         }
     }
 }
