@@ -1,0 +1,659 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000001 /* MarshroomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* MarshroomApp.swift */; };
+		AA000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002 /* AppDelegate.swift */; };
+		AA000003 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000003 /* Constants.swift */; };
+		AA000004 /* AppStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000004 /* AppStateManager.swift */; };
+		AA000005 /* SettingsStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000005 /* SettingsStorage.swift */; };
+		AA000006 /* StateFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000006 /* StateFileManager.swift */; };
+		AA000007 /* GitHubRepo.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000007 /* GitHubRepo.swift */; };
+		AA000008 /* GitHubIssue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000008 /* GitHubIssue.swift */; };
+		AA000009 /* GitHubLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000009 /* GitHubLabel.swift */; };
+		AA000010 /* CartItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000010 /* CartItem.swift */; };
+		AA000011 /* MarshroomState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000011 /* MarshroomState.swift */; };
+		AA000012 /* GitHubAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000012 /* GitHubAPIClient.swift */; };
+		AA000013 /* GitHubPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000013 /* GitHubPoller.swift */; };
+		AA000014 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000014 /* KeychainService.swift */; };
+		AA000016 /* MallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000016 /* MallView.swift */; };
+		AA000017 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000017 /* RepoListView.swift */; };
+		AA000018 /* IssueListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000018 /* IssueListView.swift */; };
+		AA000019 /* IssueRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000019 /* IssueRowView.swift */; };
+		AA000020 /* CartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000020 /* CartView.swift */; };
+		AA000021 /* CartItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000021 /* CartItemView.swift */; };
+		AA000038 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000038 /* MenuBarView.swift */; };
+		AA000025 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000025 /* OnboardingView.swift */; };
+		AA000026 /* PATInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000026 /* PATInputView.swift */; };
+		AA000027 /* RepoSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000027 /* RepoSearchView.swift */; };
+		AA000028 /* SkillSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000028 /* SkillSetupView.swift */; };
+		AA000029 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000029 /* SettingsWindow.swift */; };
+		AA000030 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000030 /* GeneralSettingsView.swift */; };
+		AA000031 /* RepoSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000031 /* RepoSettingsView.swift */; };
+		AA000032 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB000032 /* Assets.xcassets */; };
+		AA000033 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB000033 /* Security.framework */; };
+		AA000034 /* MarshroomTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000034 /* MarshroomTests.swift */; };
+		AA000035 /* IssueDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000036 /* IssueDetailView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CC000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = NN000001;
+			remoteInfo = Marshroom;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		BB000001 /* MarshroomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarshroomApp.swift; sourceTree = "<group>"; };
+		BB000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		BB000003 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		BB000004 /* AppStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateManager.swift; sourceTree = "<group>"; };
+		BB000005 /* SettingsStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStorage.swift; sourceTree = "<group>"; };
+		BB000006 /* StateFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateFileManager.swift; sourceTree = "<group>"; };
+		BB000007 /* GitHubRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubRepo.swift; sourceTree = "<group>"; };
+		BB000008 /* GitHubIssue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubIssue.swift; sourceTree = "<group>"; };
+		BB000009 /* GitHubLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubLabel.swift; sourceTree = "<group>"; };
+		BB000010 /* CartItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartItem.swift; sourceTree = "<group>"; };
+		BB000011 /* MarshroomState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarshroomState.swift; sourceTree = "<group>"; };
+		BB000012 /* GitHubAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubAPIClient.swift; sourceTree = "<group>"; };
+		BB000013 /* GitHubPoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubPoller.swift; sourceTree = "<group>"; };
+		BB000014 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		BB000016 /* MallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MallView.swift; sourceTree = "<group>"; };
+		BB000017 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
+		BB000018 /* IssueListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueListView.swift; sourceTree = "<group>"; };
+		BB000019 /* IssueRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueRowView.swift; sourceTree = "<group>"; };
+		BB000020 /* CartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartView.swift; sourceTree = "<group>"; };
+		BB000021 /* CartItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartItemView.swift; sourceTree = "<group>"; };
+		BB000038 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		BB000025 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		BB000026 /* PATInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PATInputView.swift; sourceTree = "<group>"; };
+		BB000027 /* RepoSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoSearchView.swift; sourceTree = "<group>"; };
+		BB000028 /* SkillSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillSetupView.swift; sourceTree = "<group>"; };
+		BB000029 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
+		BB000030 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		BB000031 /* RepoSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoSettingsView.swift; sourceTree = "<group>"; };
+		BB000032 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB000033 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		BB000034 /* MarshroomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarshroomTests.swift; sourceTree = "<group>"; };
+		BB000035 /* Marshroom.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Marshroom.entitlements; sourceTree = "<group>"; };
+		BB000036 /* IssueDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueDetailView.swift; sourceTree = "<group>"; };
+		EE000001 /* Marshroom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marshroom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000002 /* MarshroomTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarshroomTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FF000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000033 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		GG000001 = {
+			isa = PBXGroup;
+			children = (
+				GG000002 /* Marshroom */,
+				GG000003 /* MarshroomTests */,
+				GG000004 /* Products */,
+				GG000005 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		GG000002 /* Marshroom */ = {
+			isa = PBXGroup;
+			children = (
+				GG000006 /* App */,
+				GG000007 /* Core */,
+				GG000008 /* Models */,
+				GG000009 /* Services */,
+				GG000010 /* Features */,
+				GG000011 /* Resources */,
+				BB000035 /* Marshroom.entitlements */,
+			);
+			path = Marshroom;
+			sourceTree = "<group>";
+		};
+		GG000003 /* MarshroomTests */ = {
+			isa = PBXGroup;
+			children = (
+				BB000034 /* MarshroomTests.swift */,
+			);
+			path = MarshroomTests;
+			sourceTree = "<group>";
+		};
+		GG000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE000001 /* Marshroom.app */,
+				EE000002 /* MarshroomTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		GG000005 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BB000033 /* Security.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		GG000006 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BB000001 /* MarshroomApp.swift */,
+				BB000002 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		GG000007 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				BB000003 /* Constants.swift */,
+				BB000004 /* AppStateManager.swift */,
+				BB000005 /* SettingsStorage.swift */,
+				BB000006 /* StateFileManager.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		GG000008 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				BB000007 /* GitHubRepo.swift */,
+				BB000008 /* GitHubIssue.swift */,
+				BB000009 /* GitHubLabel.swift */,
+				BB000010 /* CartItem.swift */,
+				BB000011 /* MarshroomState.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		GG000009 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				BB000012 /* GitHubAPIClient.swift */,
+				BB000013 /* GitHubPoller.swift */,
+				BB000014 /* KeychainService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		GG000010 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				GG000012 /* Mall */,
+				GG000013 /* Pilot */,
+				GG000014 /* Onboarding */,
+				GG000015 /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		GG000011 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB000032 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		GG000012 /* Mall */ = {
+			isa = PBXGroup;
+			children = (
+				BB000016 /* MallView.swift */,
+				BB000017 /* RepoListView.swift */,
+				BB000018 /* IssueListView.swift */,
+				BB000019 /* IssueRowView.swift */,
+				BB000036 /* IssueDetailView.swift */,
+				BB000020 /* CartView.swift */,
+				BB000021 /* CartItemView.swift */,
+			);
+			path = Mall;
+			sourceTree = "<group>";
+		};
+		GG000013 /* Pilot */ = {
+			isa = PBXGroup;
+			children = (
+				BB000038 /* MenuBarView.swift */,
+			);
+			path = Pilot;
+			sourceTree = "<group>";
+		};
+		GG000014 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				BB000025 /* OnboardingView.swift */,
+				BB000026 /* PATInputView.swift */,
+				BB000027 /* RepoSearchView.swift */,
+				BB000028 /* SkillSetupView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		GG000015 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				BB000029 /* SettingsWindow.swift */,
+				BB000030 /* GeneralSettingsView.swift */,
+				BB000031 /* RepoSettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		NN000001 /* Marshroom */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = HH000001 /* Build configuration list for PBXNativeTarget "Marshroom" */;
+			buildPhases = (
+				II000001 /* Sources */,
+				FF000001 /* Frameworks */,
+				JJ000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Marshroom;
+			productName = Marshroom;
+			productReference = EE000001 /* Marshroom.app */;
+			productType = "com.apple.product-type.application";
+		};
+		NN000002 /* MarshroomTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = HH000002 /* Build configuration list for PBXNativeTarget "MarshroomTests" */;
+			buildPhases = (
+				II000002 /* Sources */,
+				FF000002 /* Frameworks */,
+				JJ000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC000002 /* PBXTargetDependency */,
+			);
+			name = MarshroomTests;
+			productName = MarshroomTests;
+			productReference = EE000002 /* MarshroomTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DD000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					NN000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					NN000002 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = NN000001;
+					};
+				};
+			};
+			buildConfigurationList = HH000003 /* Build configuration list for PBXProject "Marshroom" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = GG000001;
+			productRefGroup = GG000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				NN000001 /* Marshroom */,
+				NN000002 /* MarshroomTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		JJ000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000032 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		JJ000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		II000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000001 /* MarshroomApp.swift in Sources */,
+				AA000002 /* AppDelegate.swift in Sources */,
+				AA000003 /* Constants.swift in Sources */,
+				AA000004 /* AppStateManager.swift in Sources */,
+				AA000005 /* SettingsStorage.swift in Sources */,
+				AA000006 /* StateFileManager.swift in Sources */,
+				AA000007 /* GitHubRepo.swift in Sources */,
+				AA000008 /* GitHubIssue.swift in Sources */,
+				AA000009 /* GitHubLabel.swift in Sources */,
+				AA000010 /* CartItem.swift in Sources */,
+				AA000011 /* MarshroomState.swift in Sources */,
+				AA000012 /* GitHubAPIClient.swift in Sources */,
+				AA000013 /* GitHubPoller.swift in Sources */,
+				AA000014 /* KeychainService.swift in Sources */,
+				AA000016 /* MallView.swift in Sources */,
+				AA000017 /* RepoListView.swift in Sources */,
+				AA000018 /* IssueListView.swift in Sources */,
+				AA000019 /* IssueRowView.swift in Sources */,
+				AA000020 /* CartView.swift in Sources */,
+				AA000021 /* CartItemView.swift in Sources */,
+				AA000038 /* MenuBarView.swift in Sources */,
+				AA000025 /* OnboardingView.swift in Sources */,
+				AA000026 /* PATInputView.swift in Sources */,
+				AA000027 /* RepoSearchView.swift in Sources */,
+				AA000028 /* SkillSetupView.swift in Sources */,
+				AA000029 /* SettingsWindow.swift in Sources */,
+				AA000030 /* GeneralSettingsView.swift in Sources */,
+				AA000031 /* RepoSettingsView.swift in Sources */,
+				AA000035 /* IssueDetailView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		II000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000034 /* MarshroomTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CC000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = NN000001 /* Marshroom */;
+			targetProxy = CC000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		KK000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		KK000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		KK000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Marshroom/Marshroom.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marshroom.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		KK000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Marshroom/Marshroom.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marshroom.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		KK000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marshroom.app.MarshroomTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marshroom.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Marshroom";
+			};
+			name = Debug;
+		};
+		KK000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marshroom.app.MarshroomTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Marshroom.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Marshroom";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		HH000001 /* Build configuration list for PBXNativeTarget Marshroom */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				KK000003 /* Debug */,
+				KK000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		HH000002 /* Build configuration list for PBXNativeTarget MarshroomTests */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				KK000005 /* Debug */,
+				KK000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		HH000003 /* Build configuration list for PBXProject "Marshroom" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				KK000001 /* Debug */,
+				KK000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DD000001 /* Project object */;
+}
