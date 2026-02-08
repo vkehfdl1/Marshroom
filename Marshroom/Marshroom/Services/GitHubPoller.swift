@@ -51,7 +51,7 @@ final class GitHubPoller {
 
         var changed = false
 
-        // Refresh each cart item — detect closed issues and update cached data
+        // Refresh each cart item — detect closed issues, PR creation, and update cached data
         for item in manager.todayCart {
             guard !Task.isCancelled else { return }
 
@@ -62,8 +62,16 @@ final class GitHubPoller {
                 )
 
                 if freshIssue.state == "closed" {
-                    manager.todayCart.removeAll { $0.id == item.id }
+                    // Mark as completed, then schedule removal
+                    manager.updateCartItemStatus(item, to: .completed)
                     changed = true
+
+                    // Remove after a brief delay so UI can show completed state
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(3))
+                        manager.todayCart.removeAll { $0.id == item.id }
+                        manager.syncStateFile()
+                    }
                 } else {
                     // Update cached issue data
                     if var issues = manager.issuesByRepo[item.repo.fullName],
@@ -74,6 +82,14 @@ final class GitHubPoller {
                 }
             } catch {
                 // Silently skip individual issue fetch failures
+            }
+        }
+
+        // Refresh CLAUDE.md cache if stale
+        let currentState = StateFileManager.readState()
+        for repo in manager.highlightRepos {
+            if manager.isClaudeMdCacheStale(for: repo.fullName, state: currentState) {
+                await manager.refreshClaudeMdCache(for: repo.fullName)
             }
         }
 

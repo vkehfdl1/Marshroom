@@ -1,28 +1,86 @@
 # Marshroom
 
-GitHub Issue를 SSOT로 삼는 macOS 개발자 생산성 도구.
+Multi-Repo Execution Catalyst — a macOS developer cockpit that uses GitHub Issues.
+"Think at the speed of thought, ship at the speed of agents."
 
-## 프로젝트 구조
-- `Marshroom/` — Xcode 앱 프로젝트 (SwiftUI + AppKit, macOS 14.0+)
-- `Skills/` — Claude Code 커스텀 슬래시 커맨드 설치 자료
-- `.claude/commands/` — Claude Code 스킬 (start-issue, create-pr, validate-pr)
-
-## 기술 스택
-- SwiftUI + AppKit (MenuBarExtra for system tray)
-- `@Observable` 패턴 (not ObservableObject)
-- `actor` 기반 GitHub API 클라이언트 + async/await
-- Keychain: PAT 저장, UserDefaults: 설정, `~/.config/marshroom/state.json`: Claude Code 브릿지
-
-## 빌드 & 실행
-```bash
-xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configuration Debug build
+## Project Structure
+```
+Marshroom/              — Xcode app (SwiftUI + AppKit, macOS 14.0+)
+cli/                    — marsh CLI tool (shell script) + tmux config
+marshroom-skills/       — Vercel Agent Skills package (npx skills add)
+Skills/                 — Skill installation utilities
+.claude/commands/       — Claude Code skills (start-issue, create-pr, validate-pr)
+docs/                   — Architecture & user documentation
 ```
 
-## 핵심 규칙
-- GitHub Issue가 SSOT — 앱은 라벨(`todo-today`)로 상태를 관리
-- Cart 기준: `todo-today` 라벨 + 현재 사용자에게 assign (멀티유저 안전)
-- 단일 active issue 없음 — 모든 cart item 동등 (병렬 작업 가능)
-- state.json v2: `activeIssue` 제거, `CartEntry`에 `repoCloneURL`/`repoSSHURL` 포함
-- state.json은 원자적 쓰기(`Data.write(options: .atomic)`)로 Claude Code 동시 읽기와 충돌 방지
-- `GitHubIssue.branchName`: 제목에 Bug/Fix/HotFix 포함 시 `HotFix/#N`, 아니면 `Feature/#N`
-- Claude Code 스킬: `state.json`의 cart에서 현재 repo 매칭 + branch name 매칭으로 issue 식별
+## Tech Stack
+- SwiftUI + AppKit (MenuBarExtra for system tray, WindowGroup for main)
+- `@Observable` pattern (NOT ObservableObject) with `@Environment(AppStateManager.self)`
+- `actor` based API clients: `GitHubAPIClient`, `AnthropicClient`
+- async/await concurrency throughout
+- Keychain: GitHub PAT + Anthropic API key (separate entries)
+- UserDefaults: settings via `SettingsStorage`
+- `~/.config/marshroom/state.json`: bridge between macOS app, CLI, and Claude Code skills
+
+## Build
+```bash
+xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configuration Debug build CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES
+```
+
+## Three Pillars
+
+### 1. macOS App (Marshroom/)
+- **Issue Mall**: per-repo issue browsing, Smart Ingestion (LLM title generation via Claude API), issue creation
+- **Cart + Status Pipeline**: issues flow through `soon → running → pending → completed`
+- **Menu Bar**: quick view of today's cart items
+- **Settings**: General, Repos, AI (Anthropic API key)
+
+### 2. CLI Tool (cli/marsh)
+- `marsh hud` — tmux status bar output (current repo/issue/status)
+- `marsh start [#N]` — set cart item status to "running"
+- `marsh status` — show cart items for current repo
+- `marsh open-ide` — open PyCharm for current directory
+- `marsh pr` — set status to "pending", store PR number/URL
+- Reads/writes `~/.config/marshroom/state.json` atomically
+
+### 3. Claude Code Skills (.claude/commands/)
+- `/start-issue` — read state.json, create branch, inject CLAUDE.md + issue body context, call `marsh start`
+- `/create-pr` — push, create PR with `Closes #N`, call `marsh pr`
+- `/validate-pr` — verify branch name, PR body, and status
+
+## Core Rules
+- **No single active issue** — all cart items are equal (parallel work)
+- **state.json v3**: CartEntry has `status`, `issueBody`, `prNumber`, `prURL`; RepoEntry has `claudeMdCache`
+- **Atomic writes**: `Data.write(options: .atomic)` in Swift, `mktemp + mv` in shell — prevents race conditions
+- **Branch naming**: title contains Bug/Fix/HotFix → `HotFix/#N`, else `Feature/#N`
+- **Repo matching**: skills + CLI detect repo via `git remote get-url origin`, match against state.json URLs
+- **Smart Ingestion**: raw idea → Claude Haiku generates optimized title → GitHub issue created
+- **CLAUDE.md cache**: fetched via GitHub Contents API, cached in state.json RepoEntry, TTL 1 hour
+
+## Status Pipeline
+| Status | Meaning | Set By |
+|--------|---------|--------|
+| `soon` | In cart, not started | macOS app (add to cart) |
+| `running` | Claude Code working | `marsh start` / start-issue skill |
+| `pending` | PR created, awaiting review | `marsh pr` / create-pr skill |
+| `completed` | Issue closed / PR merged | GitHubPoller (auto-detected) |
+
+## The GOAT Flow
+1. **Draft**: Type raw idea in Issue Composer → Cmd+Enter → LLM title → Create Issue
+2. **Inject**: `/start-issue #123` → branch created, context loaded, status → running
+3. **Execute**: Claude codes → tmux HUD shows `🍄 #123 [Running]`
+4. **Review**: `Prefix+P` in tmux → PyCharm opens → review code
+5. **Ship**: `/create-pr` → PR with `Closes #N` → merge → issue auto-closes
+
+## Key Architecture Notes
+- `AppStateManager` (@Observable, @MainActor) is the central state hub
+- `GitHubAPIClient` (actor): /user, /repos, /issues, /issues/create, /contents (CLAUDE.md)
+- `AnthropicClient` (actor): Claude Haiku for title generation
+- `GitHubPoller` (@MainActor): polls cart items, detects status transitions, refreshes CLAUDE.md cache
+- `StateFileManager` (enum): reads/writes state.json, handles v2→v3 migration
+- `KeychainService` (enum): stores GitHub PAT and Anthropic API key separately
+
+## Docs
+- `docs/internal-architecture.md` — full technical architecture (for contributors + AI agents)
+- `docs/user-guide.md` — installation, GOAT workflow, CLI reference, troubleshooting
+- `docs/architecture-v2.md` — design decisions from PRD implementation

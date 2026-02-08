@@ -10,6 +10,7 @@ actor GitHubAPIClient {
         self.pat = pat
         let config = URLSessionConfiguration.default
         config.httpAdditionalHeaders = ["Accept": "application/vnd.github+json"]
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
         self.session = URLSession(configuration: config)
     }
 
@@ -38,6 +39,51 @@ actor GitHubAPIClient {
 
     func getIssue(repo: String, number: Int) async throws -> GitHubIssue {
         return try await request(endpoint: "/repos/\(repo)/issues/\(number)")
+    }
+
+    // MARK: - Issue Creation
+
+    func createIssue(repo: String, title: String, body: String?) async throws -> GitHubIssue {
+        struct CreateIssueBody: Encodable {
+            let title: String
+            let body: String?
+        }
+        let payload = CreateIssueBody(title: title, body: body)
+        return try await request(endpoint: "/repos/\(repo)/issues", method: "POST", body: payload)
+    }
+
+    // MARK: - File Content
+
+    func fetchFileContent(repo: String, path: String) async throws -> String {
+        struct FileContentResponse: Decodable {
+            let content: String
+            let encoding: String
+        }
+        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        let response: FileContentResponse = try await request(endpoint: "/repos/\(repo)/contents/\(encodedPath)")
+        guard response.encoding == "base64" else {
+            throw GitHubAPIError.httpError(statusCode: 0, message: "Unexpected encoding: \(response.encoding)")
+        }
+        let cleaned = response.content.replacingOccurrences(of: "\n", with: "")
+        guard let data = Data(base64Encoded: cleaned),
+              let text = String(data: data, encoding: .utf8) else {
+            throw GitHubAPIError.httpError(statusCode: 0, message: "Failed to decode base64 content")
+        }
+        return text
+    }
+
+    // MARK: - Labels
+
+    func addLabel(repo: String, issueNumber: Int, labels: [String]) async throws {
+        struct AddLabelsBody: Encodable {
+            let labels: [String]
+        }
+        let payload = AddLabelsBody(labels: labels)
+        let _: [GitHubLabel] = try await request(
+            endpoint: "/repos/\(repo)/issues/\(issueNumber)/labels",
+            method: "POST",
+            body: payload
+        )
     }
 
     // MARK: - Internal

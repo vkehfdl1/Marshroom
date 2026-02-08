@@ -11,5 +11,7 @@ enum Constants {
     }()
     static let stateFilePath = stateFileDirectory + "/state.json"
     static let gitHubAPIBaseURL = "https://api.github.com"
+    static let anthropicAPIBaseURL = "https://api.anthropic.com"
+    static let claudeMdCacheTTLSeconds = 3600
     static let iso8601Formatter = ISO8601DateFormatter()
 }

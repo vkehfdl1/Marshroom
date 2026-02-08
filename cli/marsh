@@ -1,0 +1,385 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STATE_FILE="$HOME/.config/marshroom/state.json"
+
+# ─── Dependency check ───────────────────────────────────────────────
+
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq is required but not installed." >&2
+  echo "Install with: brew install jq" >&2
+  exit 1
+fi
+
+# ─── Helpers ────────────────────────────────────────────────────────
+
+# Extract owner/repo from a git remote URL (HTTPS or SSH)
+extract_owner_repo() {
+  local url="$1"
+  echo "$url" | sed -E 's#(https?://github\.com/|git@github\.com:)##; s#\.git$##'
+}
+
+# Get owner/repo for the current working directory
+detect_repo() {
+  local remote
+  remote=$(git remote get-url origin 2>/dev/null) || {
+    echo "Error: Not a git repository or no 'origin' remote." >&2
+    return 1
+  }
+  extract_owner_repo "$remote"
+}
+
+# Read state.json safely; returns empty object if missing
+read_state() {
+  if [[ -f "$STATE_FILE" ]]; then
+    cat "$STATE_FILE"
+  else
+    echo '{}'
+  fi
+}
+
+# Atomic write: write to temp file then mv
+write_state() {
+  local tmp
+  tmp="$(mktemp "${STATE_FILE}.XXXXXX")"
+  cat > "$tmp"
+  mv -f "$tmp" "$STATE_FILE"
+}
+
+# tmux color for a status value
+status_color() {
+  case "$1" in
+    soon)      echo "yellow"  ;;
+    running)   echo "green"   ;;
+    pending)   echo "blue"    ;;
+    completed) echo "colour244" ;;
+    *)         echo "default" ;;
+  esac
+}
+
+# Pretty status label
+status_label() {
+  case "$1" in
+    soon)      echo "Soon"      ;;
+    running)   echo "Running"   ;;
+    pending)   echo "Pending"   ;;
+    completed) echo "Completed" ;;
+    *)         echo "$1"        ;;
+  esac
+}
+
+# ─── Subcommands ────────────────────────────────────────────────────
+
+cmd_hud() {
+  local state owner_repo
+  state=$(read_state)
+
+  if [[ "$state" == "{}" ]]; then
+    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    return 0
+  fi
+
+  owner_repo=$(detect_repo 2>/dev/null) || {
+    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    return 0
+  }
+
+  # Find cart entries for this repo
+  local entries
+  entries=$(echo "$state" | jq -r --arg repo "$owner_repo" '
+    .cart // [] | map(
+      select(
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+      )
+    )')
+
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "#[fg=colour244]🍄 No active issue#[fg=default]"
+    return 0
+  fi
+
+  # Prefer running, then soon, then pending, then first
+  local entry
+  entry=$(echo "$entries" | jq '
+    (map(select(.status == "running")) | first // null) //
+    (map(select(.status == "soon"))    | first // null) //
+    (map(select(.status == "pending")) | first // null) //
+    first')
+
+  local num title status color label
+  num=$(echo "$entry" | jq -r '.issueNumber')
+  title=$(echo "$entry" | jq -r '.issueTitle')
+  status=$(echo "$entry" | jq -r '.status // "soon"')
+  color=$(status_color "$status")
+  label=$(status_label "$status")
+
+  # Truncate title if too long for tmux bar
+  if [[ ${#title} -gt 30 ]]; then
+    title="${title:0:27}..."
+  fi
+
+  echo "#[fg=${color}]🍄#[fg=default] #${num} ${title} [${label}] | ${owner_repo}"
+}
+
+cmd_start() {
+  local state owner_repo issue_num
+  state=$(read_state)
+  owner_repo=$(detect_repo)
+
+  # Get matching cart entries for this repo
+  local entries
+  entries=$(echo "$state" | jq -r --arg repo "$owner_repo" '
+    .cart // [] | map(
+      select(
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+      )
+    )')
+
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "Error: No cart entries found for repo ${owner_repo}." >&2
+    exit 1
+  fi
+
+  if [[ -n "${1:-}" ]]; then
+    # Issue number provided (strip leading #)
+    issue_num="${1#\#}"
+    local match
+    match=$(echo "$entries" | jq --argjson n "$issue_num" 'map(select(.issueNumber == $n)) | first // null')
+    if [[ "$match" == "null" ]]; then
+      echo "Error: Issue #${issue_num} not found in cart for ${owner_repo}." >&2
+      exit 1
+    fi
+  elif [[ "$count" -eq 1 ]]; then
+    issue_num=$(echo "$entries" | jq -r '.[0].issueNumber')
+  else
+    # Multiple entries — list choices
+    echo "Multiple cart entries for ${owner_repo}:"
+    echo "$entries" | jq -r 'to_entries[] | "  [\(.key + 1)] #\(.value.issueNumber) \(.value.issueTitle) [\(.value.status // "soon")]"'
+    echo ""
+    read -rp "Select entry number: " choice
+    issue_num=$(echo "$entries" | jq -r --argjson i "$((choice - 1))" '.[$i].issueNumber')
+    if [[ -z "$issue_num" || "$issue_num" == "null" ]]; then
+      echo "Error: Invalid selection." >&2
+      exit 1
+    fi
+  fi
+
+  # Update status to running in state.json
+  local updated
+  updated=$(echo "$state" | jq --argjson n "$issue_num" --arg repo "$owner_repo" '
+    .cart |= map(
+      if .issueNumber == $n and (
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+      )
+      then .status = "running"
+      else .
+      end
+    )')
+
+  echo "$updated" | write_state
+
+  local title
+  title=$(echo "$entries" | jq -r --argjson n "$issue_num" 'map(select(.issueNumber == $n)) | first | .issueTitle')
+  echo "🍄 Started #${issue_num}: ${title} [Running]"
+}
+
+cmd_status() {
+  local state owner_repo
+  state=$(read_state)
+
+  if [[ "$state" == "{}" ]]; then
+    echo "No state.json found. Is Marshroom running?"
+    return 0
+  fi
+
+  owner_repo=$(detect_repo 2>/dev/null) || {
+    echo "Not in a git repository with an origin remote."
+    return 0
+  }
+
+  local entries
+  entries=$(echo "$state" | jq -r --arg repo "$owner_repo" '
+    .cart // [] | map(
+      select(
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+      )
+    )')
+
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  echo "🍄 Marshroom — ${owner_repo}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "  No cart entries for this repo."
+    return 0
+  fi
+
+  echo "$entries" | jq -r '.[] |
+    "  #\(.issueNumber) \(.issueTitle)\n    Status: \(.status // "soon") | Branch: \(.branchName // "—")\(.prURL // "" | if . != "" then "\n    PR: \(.)" else "" end)\n"'
+}
+
+cmd_open_ide() {
+  # Try PyCharm variants in order
+  if open -a "PyCharm Professional" "$(pwd)" 2>/dev/null; then
+    echo "🍄 Opened PyCharm Professional"
+  elif open -a "PyCharm CE" "$(pwd)" 2>/dev/null; then
+    echo "🍄 Opened PyCharm CE"
+  elif open -a "PyCharm" "$(pwd)" 2>/dev/null; then
+    echo "🍄 Opened PyCharm"
+  elif command -v pycharm &>/dev/null; then
+    pycharm . &
+    echo "🍄 Opened PyCharm (CLI launcher)"
+  else
+    echo "Error: PyCharm not found." >&2
+    echo "Install PyCharm from: https://www.jetbrains.com/pycharm/download/" >&2
+    echo "Or install via brew: brew install --cask pycharm" >&2
+    exit 1
+  fi
+}
+
+cmd_pr() {
+  local state owner_repo branch
+  state=$(read_state)
+  owner_repo=$(detect_repo)
+  branch=$(git branch --show-current 2>/dev/null) || {
+    echo "Error: Could not determine current branch." >&2
+    exit 1
+  }
+
+  # Find cart entry matching current branch
+  local entry
+  entry=$(echo "$state" | jq --arg repo "$owner_repo" --arg branch "$branch" '
+    .cart // [] | map(
+      select(
+        (
+          (.repoFullName // "") == $repo or
+          ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+          ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+        ) and (.branchName // "") == $branch
+      )
+    ) | first // null')
+
+  if [[ "$entry" == "null" ]]; then
+    echo "Error: No cart entry found for branch '${branch}' in ${owner_repo}." >&2
+    exit 1
+  fi
+
+  local issue_num title
+  issue_num=$(echo "$entry" | jq -r '.issueNumber')
+  title=$(echo "$entry" | jq -r '.issueTitle')
+
+  # Try to get PR info from gh CLI
+  local pr_number="" pr_url=""
+  if command -v gh &>/dev/null; then
+    local pr_info
+    pr_info=$(gh pr view --json number,url -q '.number,.url' 2>/dev/null) || true
+    if [[ -n "$pr_info" ]]; then
+      pr_number=$(echo "$pr_info" | head -1)
+      pr_url=$(echo "$pr_info" | tail -1)
+    fi
+  fi
+
+  # Update state.json: set status to pending + store PR info
+  local updated
+  if [[ -n "$pr_number" ]]; then
+    updated=$(echo "$state" | jq \
+      --argjson n "$issue_num" \
+      --arg repo "$owner_repo" \
+      --argjson prNum "$pr_number" \
+      --arg prUrl "$pr_url" \
+      '
+      .cart |= map(
+        if .issueNumber == $n and (
+          (.repoFullName // "") == $repo or
+          ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+          ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+        )
+        then .status = "pending" | .prNumber = $prNum | .prURL = $prUrl
+        else .
+        end
+      )')
+  else
+    updated=$(echo "$state" | jq \
+      --argjson n "$issue_num" \
+      --arg repo "$owner_repo" \
+      '
+      .cart |= map(
+        if .issueNumber == $n and (
+          (.repoFullName // "") == $repo or
+          ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+          ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+        )
+        then .status = "pending"
+        else .
+        end
+      )')
+  fi
+
+  echo "$updated" | write_state
+
+  echo "🍄 PR for #${issue_num}: ${title} [Pending]"
+  if [[ -n "$pr_url" ]]; then
+    echo "  PR: ${pr_url}"
+  fi
+}
+
+cmd_help() {
+  cat <<'HELP'
+🍄 marsh — Marshroom CLI
+
+Usage: marsh <command> [options]
+
+Commands:
+  hud          Output tmux-formatted status string for current repo
+  start [#N]   Mark a cart issue as running (prompts if multiple)
+  status       Show cart entries for the current repo
+  open-ide     Open current directory in PyCharm
+  pr           Mark current branch's issue as pending (PR created)
+  help         Show this help message
+
+State file: ~/.config/marshroom/state.json
+
+tmux integration:
+  set -g status-right '#(marsh hud) | %H:%M'
+  set -g status-interval 5
+
+Examples:
+  marsh hud              # tmux status bar output
+  marsh start #42        # start working on issue #42
+  marsh start            # interactive pick if multiple issues
+  marsh status           # show all cart items for current repo
+  marsh pr               # mark current branch as PR pending
+HELP
+}
+
+# ─── Main dispatch ──────────────────────────────────────────────────
+
+case "${1:-help}" in
+  hud)      cmd_hud ;;
+  start)    shift; cmd_start "${1:-}" ;;
+  status)   cmd_status ;;
+  open-ide) cmd_open_ide ;;
+  pr)       cmd_pr ;;
+  help|--help|-h) cmd_help ;;
+  *)
+    echo "Unknown command: $1" >&2
+    echo "Run 'marsh help' for usage." >&2
+    exit 1
+    ;;
+esac

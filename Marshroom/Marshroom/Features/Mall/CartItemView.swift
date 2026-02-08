@@ -7,6 +7,15 @@ struct CartItemView: View {
     var body: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(item.status.color)
+                        .frame(width: 8, height: 8)
+                    Text(item.status.displayName)
+                        .font(.caption2)
+                        .foregroundStyle(item.status.color)
+                }
+
                 Text(item.repo.fullName)
                     .font(.caption)
                     .foregroundStyle(.secondary)

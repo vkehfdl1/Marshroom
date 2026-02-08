@@ -3,6 +3,18 @@ import SwiftUI
 struct CartView: View {
     @Environment(AppStateManager.self) private var appState
 
+    private var soonItems: [CartItem] {
+        appState.todayCart.filter { $0.status == .soon }
+    }
+
+    private var runningItems: [CartItem] {
+        appState.todayCart.filter { $0.status == .running }
+    }
+
+    private var pendingItems: [CartItem] {
+        appState.todayCart.filter { $0.status == .pending }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -34,8 +46,37 @@ struct CartView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    ForEach(appState.todayCart) { item in
-                        CartItemView(item: item)
+                    if !runningItems.isEmpty {
+                        Section {
+                            ForEach(runningItems) { item in
+                                CartItemView(item: item)
+                            }
+                        } header: {
+                            Label("Running", systemImage: IssueStatus.running.iconName)
+                                .foregroundStyle(IssueStatus.running.color)
+                        }
+                    }
+
+                    if !pendingItems.isEmpty {
+                        Section {
+                            ForEach(pendingItems) { item in
+                                CartItemView(item: item)
+                            }
+                        } header: {
+                            Label("Pending", systemImage: IssueStatus.pending.iconName)
+                                .foregroundStyle(IssueStatus.pending.color)
+                        }
+                    }
+
+                    if !soonItems.isEmpty {
+                        Section {
+                            ForEach(soonItems) { item in
+                                CartItemView(item: item)
+                            }
+                        } header: {
+                            Label("Soon", systemImage: IssueStatus.soon.iconName)
+                                .foregroundStyle(IssueStatus.soon.color)
+                        }
                     }
                 }
                 .listStyle(.inset)

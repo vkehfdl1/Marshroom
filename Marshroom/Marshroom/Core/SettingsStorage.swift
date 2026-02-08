@@ -39,6 +39,10 @@ final class SettingsStorage {
         return (try? JSONDecoder().decode([GitHubRepo].self, from: data)) ?? []
     }
 
+    var hasAnthropicKey: Bool {
+        KeychainService.loadAnthropicKey() != nil
+    }
+
     private enum Keys {
         static let pollingInterval = "pollingIntervalSeconds"
         static let pinnedRepos = "pinnedRepoNames"

@@ -1,0 +1,22 @@
+{
+  "name": "marshroom-skills",
+  "version": "1.0.0",
+  "description": "Marshroom: Multi-Repo Execution Catalyst - Agent Skills for Claude Code",
+  "keywords": [
+    "claude-code",
+    "agent-skills",
+    "github",
+    "issue-management",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marshroom/marshroom-skills"
+  },
+  "skills": {
+    "start-issue": "skills/start-issue/SKILL.md",
+    "create-pr": "skills/create-pr/SKILL.md",
+    "validate-pr": "skills/validate-pr/SKILL.md"
+  }
+}

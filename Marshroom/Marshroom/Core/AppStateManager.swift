@@ -19,7 +19,11 @@ final class AppStateManager {
 
     let settings: SettingsStorage
     private(set) var apiClient: GitHubAPIClient?
+    private(set) var anthropicClient: AnthropicClient?
     private var poller: GitHubPoller?
+
+    // CLAUDE.md cache (repo fullName → content)
+    private var claudeMdCacheStore: [String: String] = [:]
 
     var isOnboarded: Bool {
         settings.hasCompletedOnboarding
@@ -31,6 +35,11 @@ final class AppStateManager {
         // Restore API client from keychain
         if let pat = KeychainService.loadPAT() {
             self.apiClient = GitHubAPIClient(pat: pat)
+        }
+
+        // Restore Anthropic client from keychain
+        if let anthropicKey = KeychainService.loadAnthropicKey() {
+            self.anthropicClient = AnthropicClient(apiKey: anthropicKey)
         }
     }
 
@@ -47,6 +56,14 @@ final class AppStateManager {
         self.apiClient = client
         self.currentUser = user
         return user
+    }
+
+    func refreshAnthropicClient() {
+        if let key = KeychainService.loadAnthropicKey() {
+            self.anthropicClient = AnthropicClient(apiKey: key)
+        } else {
+            self.anthropicClient = nil
+        }
     }
 
     // MARK: - Repos
@@ -122,6 +139,55 @@ final class AppStateManager {
         syncStateFile()
     }
 
+    func updateCartItemStatus(_ item: CartItem, to newStatus: IssueStatus) {
+        guard let idx = todayCart.firstIndex(where: { $0.id == item.id }) else { return }
+        todayCart[idx].status = newStatus
+        syncStateFile()
+    }
+
+    // MARK: - Issue Creation
+
+    func createIssue(repo: String, title: String, body: String?) async throws -> GitHubIssue {
+        guard let client = apiClient else {
+            throw GitHubAPIError.invalidResponse
+        }
+        return try await client.createIssue(repo: repo, title: title, body: body)
+    }
+
+    func generateIssueTitle(rawInput: String, repo: String) async throws -> String {
+        guard let client = anthropicClient else {
+            throw AnthropicError.invalidResponse
+        }
+        let claudeMd = claudeMdCache(for: repo)
+        return try await client.generateTitle(rawInput: rawInput, claudeMd: claudeMd, repoName: repo)
+    }
+
+    // MARK: - CLAUDE.md Cache
+
+    func claudeMdCache(for repoFullName: String) -> String? {
+        claudeMdCacheStore[repoFullName]
+    }
+
+    func refreshClaudeMdCache(for repoFullName: String) async {
+        guard let client = apiClient else { return }
+        do {
+            let content = try await client.fetchFileContent(repo: repoFullName, path: "CLAUDE.md")
+            claudeMdCacheStore[repoFullName] = content
+        } catch {
+            // File may not exist — that's OK
+        }
+    }
+
+    func isClaudeMdCacheStale(for repoFullName: String, state: MarshroomState?) -> Bool {
+        guard let state,
+              let repoEntry = state.repos.first(where: { $0.fullName == repoFullName }),
+              let cachedAt = repoEntry.claudeMdCachedAt,
+              let date = Constants.iso8601Formatter.date(from: cachedAt) else {
+            return true
+        }
+        return Date().timeIntervalSince(date) > TimeInterval(Constants.claudeMdCacheTTLSeconds)
+    }
+
     // MARK: - Highlight Repos Persistence
 
     func restoreHighlightRepos() {
@@ -154,7 +220,7 @@ final class AppStateManager {
                 id: 0,
                 number: entry.issueNumber,
                 title: entry.issueTitle,
-                body: nil,
+                body: entry.issueBody,
                 state: "open",
                 labels: [],
                 htmlURL: "https://github.com/\(entry.repoFullName)/issues/\(entry.issueNumber)",
@@ -165,9 +231,16 @@ final class AppStateManager {
                 pullRequest: nil
             )
 
-            let item = CartItem(repo: repo, issue: issue)
+            let item = CartItem(repo: repo, issue: issue, status: entry.status)
             if !todayCart.contains(where: { $0.id == item.id }) {
                 todayCart.append(item)
+            }
+        }
+
+        // Restore CLAUDE.md caches from state
+        for repoEntry in state.repos {
+            if let cache = repoEntry.claudeMdCache {
+                claudeMdCacheStore[repoEntry.fullName] = cache
             }
         }
     }
@@ -175,9 +248,11 @@ final class AppStateManager {
     // MARK: - State File
 
     func syncStateFile() {
+        let existingState = StateFileManager.readState()
         let state = StateFileManager.buildState(
             cart: todayCart,
-            repos: highlightRepos
+            repos: highlightRepos,
+            existingState: existingState
         )
         try? StateFileManager.writeState(state)
     }

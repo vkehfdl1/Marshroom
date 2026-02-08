@@ -39,6 +39,10 @@
 		AA000033 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB000033 /* Security.framework */; };
 		AA000034 /* MarshroomTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000034 /* MarshroomTests.swift */; };
 		AA000035 /* IssueDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000036 /* IssueDetailView.swift */; };
+		AA000040 /* IssueStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000040 /* IssueStatus.swift */; };
+		AA000041 /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000041 /* AnthropicClient.swift */; };
+		AA000042 /* IssueComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000042 /* IssueComposerView.swift */; };
+		AA000043 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000043 /* AISettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +89,10 @@
 		BB000034 /* MarshroomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarshroomTests.swift; sourceTree = "<group>"; };
 		BB000035 /* Marshroom.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Marshroom.entitlements; sourceTree = "<group>"; };
 		BB000036 /* IssueDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueDetailView.swift; sourceTree = "<group>"; };
+		BB000040 /* IssueStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueStatus.swift; sourceTree = "<group>"; };
+		BB000041 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
+		BB000042 /* IssueComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueComposerView.swift; sourceTree = "<group>"; };
+		BB000043 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 		EE000001 /* Marshroom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marshroom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE000002 /* MarshroomTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarshroomTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -185,6 +193,7 @@
 				BB000009 /* GitHubLabel.swift */,
 				BB000010 /* CartItem.swift */,
 				BB000011 /* MarshroomState.swift */,
+				BB000040 /* IssueStatus.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -195,6 +204,7 @@
 				BB000012 /* GitHubAPIClient.swift */,
 				BB000013 /* GitHubPoller.swift */,
 				BB000014 /* KeychainService.swift */,
+				BB000041 /* AnthropicClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -228,6 +238,7 @@
 				BB000036 /* IssueDetailView.swift */,
 				BB000020 /* CartView.swift */,
 				BB000021 /* CartItemView.swift */,
+				BB000042 /* IssueComposerView.swift */,
 			);
 			path = Mall;
 			sourceTree = "<group>";
@@ -257,6 +268,7 @@
 				BB000029 /* SettingsWindow.swift */,
 				BB000030 /* GeneralSettingsView.swift */,
 				BB000031 /* RepoSettingsView.swift */,
+				BB000043 /* AISettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -389,6 +401,10 @@
 				AA000030 /* GeneralSettingsView.swift in Sources */,
 				AA000031 /* RepoSettingsView.swift in Sources */,
 				AA000035 /* IssueDetailView.swift in Sources */,
+				AA000040 /* IssueStatus.swift in Sources */,
+				AA000041 /* AnthropicClient.swift in Sources */,
+				AA000042 /* IssueComposerView.swift in Sources */,
+				AA000043 /* AISettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

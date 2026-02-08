@@ -31,6 +31,7 @@ enum StateFileManager {
         }
 
         var mutable = state
+        mutable.version = 3
         mutable.updatedAt = Constants.iso8601Formatter.string(from: Date())
 
         let data = try encoder.encode(mutable)
@@ -40,15 +41,23 @@ enum StateFileManager {
 
     static func buildState(
         cart: [CartItem],
-        repos: [GitHubRepo]
+        repos: [GitHubRepo],
+        existingState: MarshroomState? = nil
     ) -> MarshroomState {
         var state = MarshroomState.empty()
 
+        // Preserve repo-level cache data from existing state
+        let existingRepos = existingState?.repos ?? []
+
         state.repos = repos.map { repo in
-            MarshroomState.RepoEntry(
+            let existing = existingRepos.first { $0.fullName == repo.fullName }
+            return MarshroomState.RepoEntry(
                 fullName: repo.fullName,
                 cloneURL: repo.cloneURL,
-                sshURL: repo.sshURL
+                sshURL: repo.sshURL,
+                claudeMdCache: existing?.claudeMdCache,
+                claudeMdCachedAt: existing?.claudeMdCachedAt,
+                localPath: existing?.localPath
             )
         }
 
@@ -59,7 +68,9 @@ enum StateFileManager {
                 repoSSHURL: item.repo.sshURL,
                 issueNumber: item.issue.number,
                 issueTitle: item.issue.title,
-                branchName: item.branchName
+                branchName: item.branchName,
+                status: item.status,
+                issueBody: item.issue.body
             )
         }
 
