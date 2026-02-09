@@ -11,10 +11,6 @@ struct IssueRowView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "circle.fill")
-                .foregroundStyle(.green)
-                .padding(.top, 2)
-
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("#\(issue.number)")
