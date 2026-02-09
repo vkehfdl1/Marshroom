@@ -18,6 +18,10 @@ final class SettingsStorage {
         didSet { UserDefaults.standard.set(selectedRepoFullName, forKey: Keys.selectedRepo) }
     }
 
+    var completionResetHour: Int {
+        didSet { UserDefaults.standard.set(completionResetHour, forKey: Keys.completionResetHour) }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         let interval = defaults.integer(forKey: Keys.pollingInterval)
@@ -25,6 +29,8 @@ final class SettingsStorage {
         self.pinnedRepoNames = defaults.stringArray(forKey: Keys.pinnedRepos) ?? []
         self.hasCompletedOnboarding = defaults.bool(forKey: Keys.onboarded)
         self.selectedRepoFullName = defaults.string(forKey: Keys.selectedRepo)
+        let resetHour = defaults.object(forKey: Keys.completionResetHour) as? Int
+        self.completionResetHour = resetHour ?? 0
     }
 
     // MARK: - Highlight Repos Persistence
@@ -49,5 +55,6 @@ final class SettingsStorage {
         static let onboarded = "hasCompletedOnboarding"
         static let selectedRepo = "selectedRepoFullName"
         static let highlightReposData = "highlightReposData"
+        static let completionResetHour = "completionResetHour"
     }
 }

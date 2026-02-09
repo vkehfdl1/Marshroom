@@ -15,6 +15,10 @@ final class AppStateManager {
     // Repo → Issues cache
     var issuesByRepo: [String: [GitHubIssue]] = [:]
 
+    // Completion tracking
+    var todayCompletions: Int = 0
+    var todayCompletionsDate: String?
+
     // MARK: - Dependencies
 
     let settings: SettingsStorage
@@ -143,7 +147,14 @@ final class AppStateManager {
 
     func updateCartItemStatus(_ item: CartItem, to newStatus: IssueStatus) {
         guard let idx = todayCart.firstIndex(where: { $0.id == item.id }) else { return }
+        let oldStatus = todayCart[idx].status
         todayCart[idx].status = newStatus
+
+        if newStatus == .completed && oldStatus != .completed {
+            resetCompletionsIfNewDay()
+            todayCompletions += 1
+        }
+
         syncStateFile()
     }
 
@@ -188,6 +199,22 @@ final class AppStateManager {
             return true
         }
         return Date().timeIntervalSince(date) > TimeInterval(Constants.claudeMdCacheTTLSeconds)
+    }
+
+    // MARK: - Completion Tracking
+
+    func currentDayString() -> String {
+        let now = Date()
+        let adjusted = Calendar.current.date(byAdding: .hour, value: -settings.completionResetHour, to: now) ?? now
+        return Constants.dateOnlyFormatter.string(from: adjusted)
+    }
+
+    func resetCompletionsIfNewDay() {
+        let today = currentDayString()
+        if todayCompletionsDate != today {
+            todayCompletions = 0
+            todayCompletionsDate = today
+        }
     }
 
     // MARK: - Highlight Repos Persistence
@@ -245,6 +272,16 @@ final class AppStateManager {
                 claudeMdCacheStore[repoEntry.fullName] = cache
             }
         }
+
+        // Restore completion count
+        let today = currentDayString()
+        if state.todayCompletionsDate == today {
+            todayCompletions = state.todayCompletions ?? 0
+            todayCompletionsDate = today
+        } else {
+            todayCompletions = 0
+            todayCompletionsDate = today
+        }
     }
 
     // MARK: - State File
@@ -252,11 +289,13 @@ final class AppStateManager {
     func syncStateFile() {
         lastSelfWriteTime = Date()
         let existingState = StateFileManager.readState()
-        let state = StateFileManager.buildState(
+        var state = StateFileManager.buildState(
             cart: todayCart,
             repos: highlightRepos,
             existingState: existingState
         )
+        state.todayCompletions = todayCompletions
+        state.todayCompletionsDate = todayCompletionsDate
         try? StateFileManager.writeState(state)
     }
 
@@ -348,6 +387,13 @@ final class AppStateManager {
         }
 
         todayCart = updatedCart
+
+        // Sync completion count from external changes
+        let today = currentDayString()
+        if state.todayCompletionsDate == today {
+            todayCompletions = state.todayCompletions ?? 0
+            todayCompletionsDate = today
+        }
     }
 
     // MARK: - Polling

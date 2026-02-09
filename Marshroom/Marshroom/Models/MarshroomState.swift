@@ -5,6 +5,8 @@ struct MarshroomState: Codable {
     var updatedAt: String
     var cart: [CartEntry]
     var repos: [RepoEntry]
+    var todayCompletions: Int?
+    var todayCompletionsDate: String?
 
     struct CartEntry: Codable {
         let repoFullName: String
@@ -96,7 +98,9 @@ struct MarshroomState: Codable {
         MarshroomState(
             updatedAt: Constants.iso8601Formatter.string(from: Date()),
             cart: [],
-            repos: []
+            repos: [],
+            todayCompletions: 0,
+            todayCompletionsDate: nil
         )
     }
 }

@@ -14,4 +14,10 @@ enum Constants {
     static let anthropicAPIBaseURL = "https://api.anthropic.com"
     static let claudeMdCacheTTLSeconds = 3600
     static let iso8601Formatter = ISO8601DateFormatter()
+    static let dateOnlyFormatter: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = .current
+        return fmt
+    }()
 }
