@@ -5,10 +5,7 @@ struct SkillSetupView: View {
 
     let onComplete: () -> Void
 
-    private let installCommand = """
-    # From your project root:
-    curl -fsSL https://raw.githubusercontent.com/your-org/marshroom/main/marshroom-skills/scripts/install-skill.sh | bash
-    """
+    private let installCommand = "npx skills add https://github.com/vkehfdl1/Marshroom/tree/main/marshroom-skills"
 
     var body: some View {
         VStack(spacing: 20) {
@@ -21,7 +18,7 @@ struct SkillSetupView: View {
             Text("Install Claude Code Skills")
                 .font(.title2.bold())
 
-            Text("Copy the Claude Code slash commands to your project's `.claude/commands/` directory.")
+            Text("Install the Marshroom skills for Claude Code in your project.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -56,7 +53,7 @@ struct SkillSetupView: View {
             }
             .frame(maxWidth: 400)
 
-            Text("You can also copy the files manually from the marshroom-skills/skills/ directory.")
+            Text("Run this command from your project root to install the skills.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
