@@ -18,7 +18,34 @@ Marshroom is a macOS developer productivity tool that uses GitHub Issues for you
 
 ## 3. Installation
 
-### Build from source
+### Automated install (recommended)
+
+The install script handles everything — macOS app, CLI, tmux plugin, and skills instructions:
+
+```bash
+git clone https://github.com/vkehfdl1/Marshroom.git && cd Marshroom
+./install.sh
+```
+
+Install individual components with flags:
+
+| Flag | Effect |
+|------|--------|
+| (none) | Install all components |
+| `--app` | macOS app only (from GitHub Releases, falls back to build from source) |
+| `--cli` | marsh CLI only (symlinks to `/usr/local/bin/marsh`) |
+| `--tmux` | tmux plugin only (installs tpm, symlinks plugin, configures `.tmux.conf`) |
+| `--skills` | Print per-project Claude Code skills install instructions |
+| `--check` | Verify dependencies without making changes |
+| `--help` | Print usage |
+
+Flags are combinable: `./install.sh --cli --tmux`
+
+The installer is idempotent — re-running it skips components that are already correctly installed.
+
+### Manual install
+
+#### Build from source
 
 ```bash
 git clone https://github.com/marshroom/marshroom.git
@@ -33,7 +60,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj \
 
 The built app lands in `build/Build/Products/Debug/Marshroom.app`. Move it to `/Applications` or run directly.
 
-### Install skills
+#### Install skills
 
 **Vercel Agent Skills (recommended):**
 
@@ -43,7 +70,7 @@ npx skills add https://github.com/vkehfdl1/Marshroom/tree/main/marshroom-skills
 
 Skills need to be installed in **each project** you want to use them in.
 
-### Install marsh CLI
+#### Install marsh CLI
 
 Add the `cli/` directory to your PATH:
 
@@ -58,7 +85,7 @@ Verify:
 marsh help
 ```
 
-### Configure tmux (tpm plugin)
+#### Configure tmux (tpm plugin)
 
 First, install [tpm](https://github.com/tmux-plugins/tpm) if you haven't:
 

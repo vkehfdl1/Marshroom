@@ -56,12 +56,31 @@ This pushes the branch, creates a PR with `Closes #42` in the body, includes the
 | tmux | `brew install tmux` |
 | Claude Code | `npm install -g @anthropic-ai/claude-code` |
 
-### Build the app
+### Automated install
 
 ```bash
-git clone https://github.com/vkehfdl1/Marshroom.git
-cd Marshroom
+git clone https://github.com/vkehfdl1/Marshroom.git && cd Marshroom
+./install.sh
+```
 
+This installs the macOS app, symlinks the `marsh` CLI, sets up the tmux plugin (including tpm), and prints instructions for Claude Code skills. Run `./install.sh --check` to verify dependencies without making changes, or pick individual components:
+
+```bash
+./install.sh --app          # macOS app only
+./install.sh --cli          # marsh CLI only
+./install.sh --tmux         # tmux plugin only
+./install.sh --skills       # show per-project skills instructions
+./install.sh --cli --tmux   # combine flags
+```
+
+### Manual install
+
+<details>
+<summary>Click to expand manual installation steps</summary>
+
+#### Build the app
+
+```bash
 xcodebuild -project Marshroom/Marshroom.xcodeproj \
   -scheme Marshroom \
   -configuration Debug build \
@@ -71,7 +90,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj \
 
 The built app ends up in `build/Build/Products/Debug/Marshroom.app`.
 
-### Install the CLI
+#### Install the CLI
 
 Add the `cli/` directory to your PATH:
 
@@ -82,7 +101,7 @@ export PATH="$PATH:/path/to/Marshroom/cli"
 
 Verify with `marsh help`.
 
-### Set up tmux
+#### Set up tmux
 
 Install [tpm](https://github.com/tmux-plugins/tpm) if you haven't, then add to `~/.tmux.conf`:
 
@@ -96,13 +115,15 @@ run '~/.tmux/plugins/tpm/tpm'
 
 Press `prefix + I` to install the plugin. This gives you the status bar HUD, per-pane borders, and IDE keybindings (`Prefix+Ctrl-p` for PyCharm, `Prefix+Ctrl-v` for VSCode).
 
-### Install skills
+#### Install skills
 
 In each project you want to use with Marshroom:
 
 ```bash
 npx skills add https://github.com/vkehfdl1/Marshroom/tree/main/marshroom-skills
 ```
+
+</details>
 
 ### First run
 
