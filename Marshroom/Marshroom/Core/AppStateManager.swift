@@ -340,9 +340,6 @@ final class AppStateManager {
 
         guard let state = StateFileManager.readState() else { return }
 
-        // Snapshot old cart for transition detection
-        let oldCart = todayCart
-
         // Build lookup from state.json cart entries
         var stateEntries: [String: MarshroomState.CartEntry] = [:]
         for entry in state.cart {
@@ -394,17 +391,6 @@ final class AppStateManager {
         }
 
         todayCart = updatedCart
-
-        // Auto-open PR in browser when item transitions to pending
-        for item in updatedCart {
-            guard item.status == .pending,
-                  let urlString = item.prURL,
-                  let url = URL(string: urlString) else { continue }
-            let oldItem = oldCart.first { $0.id == item.id }
-            if oldItem == nil || oldItem?.status != .pending {
-                NSWorkspace.shared.open(url)
-            }
-        }
 
         // Sync completion count from external changes
         let today = currentDayString()
