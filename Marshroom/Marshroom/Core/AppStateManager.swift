@@ -260,7 +260,8 @@ final class AppStateManager {
                 pullRequest: nil
             )
 
-            let item = CartItem(repo: repo, issue: issue, status: entry.status)
+            let item = CartItem(repo: repo, issue: issue, status: entry.status,
+                                prNumber: entry.prNumber, prURL: entry.prURL)
             if !todayCart.contains(where: { $0.id == item.id }) {
                 todayCart.append(item)
             }
@@ -339,6 +340,9 @@ final class AppStateManager {
 
         guard let state = StateFileManager.readState() else { return }
 
+        // Snapshot old cart for transition detection
+        let oldCart = todayCart
+
         // Build lookup from state.json cart entries
         var stateEntries: [String: MarshroomState.CartEntry] = [:]
         for entry in state.cart {
@@ -351,6 +355,8 @@ final class AppStateManager {
             let key = item.id
             if let entry = stateEntries.removeValue(forKey: key) {
                 item.status = entry.status
+                item.prNumber = entry.prNumber
+                item.prURL = entry.prURL
                 updatedCart.append(item)
             }
             // If not in state file, item was removed externally — drop it
@@ -383,10 +389,22 @@ final class AppStateManager {
                 updatedAt: "",
                 pullRequest: nil
             )
-            updatedCart.append(CartItem(repo: repo, issue: issue, status: entry.status))
+            updatedCart.append(CartItem(repo: repo, issue: issue, status: entry.status,
+                                        prNumber: entry.prNumber, prURL: entry.prURL))
         }
 
         todayCart = updatedCart
+
+        // Auto-open PR in browser when item transitions to pending
+        for item in updatedCart {
+            guard item.status == .pending,
+                  let urlString = item.prURL,
+                  let url = URL(string: urlString) else { continue }
+            let oldItem = oldCart.first { $0.id == item.id }
+            if oldItem == nil || oldItem?.status != .pending {
+                NSWorkspace.shared.open(url)
+            }
+        }
 
         // Sync completion count from external changes
         let today = currentDayString()
