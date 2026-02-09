@@ -14,6 +14,15 @@ struct CartItemView: View {
                     Text(item.status.displayName)
                         .font(.caption2)
                         .foregroundStyle(item.status.color)
+
+                    if let prNumber = item.prNumber {
+                        Text("PR #\(prNumber)")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(.orange.opacity(0.12), in: Capsule())
+                    }
                 }
 
                 Text(item.repo.fullName)
@@ -34,6 +43,17 @@ struct CartItemView: View {
 
             Spacer()
 
+            if item.prURL != nil {
+                Button {
+                    openPR()
+                } label: {
+                    Image(systemName: "arrow.up.forward.square")
+                        .foregroundStyle(.orange)
+                }
+                .buttonStyle(.plain)
+                .help("Open PR in browser")
+            }
+
             Button(role: .destructive) {
                 appState.removeIssueFromCart(item)
             } label: {
@@ -43,5 +63,15 @@ struct CartItemView: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openPR()
+        }
+    }
+
+    private func openPR() {
+        guard let urlString = item.prURL,
+              let url = URL(string: urlString) else { return }
+        NSWorkspace.shared.open(url)
     }
 }

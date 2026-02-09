@@ -260,7 +260,8 @@ final class AppStateManager {
                 pullRequest: nil
             )
 
-            let item = CartItem(repo: repo, issue: issue, status: entry.status)
+            let item = CartItem(repo: repo, issue: issue, status: entry.status,
+                                prNumber: entry.prNumber, prURL: entry.prURL)
             if !todayCart.contains(where: { $0.id == item.id }) {
                 todayCart.append(item)
             }
@@ -351,6 +352,8 @@ final class AppStateManager {
             let key = item.id
             if let entry = stateEntries.removeValue(forKey: key) {
                 item.status = entry.status
+                item.prNumber = entry.prNumber
+                item.prURL = entry.prURL
                 updatedCart.append(item)
             }
             // If not in state file, item was removed externally — drop it
@@ -383,7 +386,8 @@ final class AppStateManager {
                 updatedAt: "",
                 pullRequest: nil
             )
-            updatedCart.append(CartItem(repo: repo, issue: issue, status: entry.status))
+            updatedCart.append(CartItem(repo: repo, issue: issue, status: entry.status,
+                                        prNumber: entry.prNumber, prURL: entry.prURL))
         }
 
         todayCart = updatedCart

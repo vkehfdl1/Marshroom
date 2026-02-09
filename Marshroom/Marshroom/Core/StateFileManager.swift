@@ -70,7 +70,9 @@ enum StateFileManager {
                 issueTitle: item.issue.title,
                 branchName: item.branchName,
                 status: item.status,
-                issueBody: item.issue.body
+                issueBody: item.issue.body,
+                prNumber: item.prNumber,
+                prURL: item.prURL
             )
         }
 

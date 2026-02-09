@@ -129,18 +129,37 @@ private struct MenuBarIssueRow: View {
                         .font(.callout)
                         .lineLimit(1)
                 }
-                Text(item.repo.name)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text(item.repo.name)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    if let prNumber = item.prNumber {
+                        Text("PR #\(prNumber)")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
 
             Spacer()
 
-            Text(item.status.displayName)
-                .font(.caption2)
-                .foregroundStyle(item.status.color)
+            if item.prURL != nil {
+                Image(systemName: "arrow.up.forward.square")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            } else {
+                Text(item.status.displayName)
+                    .font(.caption2)
+                    .foregroundStyle(item.status.color)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard let urlString = item.prURL,
+                  let url = URL(string: urlString) else { return }
+            NSWorkspace.shared.open(url)
+        }
     }
 }
