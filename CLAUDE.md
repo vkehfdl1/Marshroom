@@ -23,7 +23,11 @@ docs/                   — Architecture & user documentation
 
 ## Build
 ```bash
+# Debug (ad-hoc signing)
 xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configuration Debug build CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES
+
+# Release (Developer ID signed + notarized DMG)
+./scripts/build-dmg.sh
 ```
 
 ## Three Pillars
