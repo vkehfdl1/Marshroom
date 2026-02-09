@@ -24,7 +24,7 @@ struct MenuBarView: View {
             Divider()
 
             // Status summary bar
-            if !appState.todayCart.isEmpty {
+            if !appState.todayCart.isEmpty || appState.todayCompletions > 0 {
                 HStack(spacing: 10) {
                     ForEach([IssueStatus.running, .pending, .soon], id: \.self) { status in
                         let count = appState.todayCart.filter { $0.status == status }.count
@@ -37,6 +37,16 @@ struct MenuBarView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
+                        }
+                    }
+                    if appState.todayCompletions > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.green)
+                            Text("\(appState.todayCompletions)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     Spacer()
@@ -94,6 +104,9 @@ struct MenuBarView: View {
             .padding(.vertical, 8)
         }
         .frame(width: 300)
+        .onAppear {
+            appState.resetCompletionsIfNewDay()
+        }
     }
 }
 

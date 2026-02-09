@@ -24,7 +24,7 @@ struct CartView: View {
                     .font(.headline)
                 Spacer()
                 HStack(spacing: 6) {
-                    ForEach(IssueStatus.allCases, id: \.self) { status in
+                    ForEach([IssueStatus.running, .pending, .soon], id: \.self) { status in
                         let count = appState.todayCart.filter { $0.status == status }.count
                         if count > 0 {
                             HStack(spacing: 3) {
@@ -38,6 +38,18 @@ struct CartView: View {
                             .padding(.vertical, 2)
                             .background(status.color.opacity(0.12), in: Capsule())
                         }
+                    }
+                    if appState.todayCompletions > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption2)
+                            Text("\(appState.todayCompletions)")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(Color.green)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.green.opacity(0.12), in: Capsule())
                     }
                 }
             }
@@ -95,6 +107,9 @@ struct CartView: View {
                 }
                 .listStyle(.inset)
             }
+        }
+        .onAppear {
+            appState.resetCompletionsIfNewDay()
         }
     }
 }
