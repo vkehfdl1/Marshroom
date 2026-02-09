@@ -58,10 +58,14 @@ echo ""
 
 # Step 3: Notarize
 echo "[3/5] Submitting for notarization..."
-xcrun notarytool submit "$APP_PATH" \
+APP_ZIP="$BUILD_DIR/Marshroom.zip"
+ditto -c -k --keepParent "$APP_PATH" "$APP_ZIP"
+
+xcrun notarytool submit "$APP_ZIP" \
     --keychain-profile "$KEYCHAIN_PROFILE" \
     --wait
 
+rm -f "$APP_ZIP"
 echo "  Notarization complete"
 
 # Step 4: Staple
