@@ -1,5 +1,15 @@
 import Foundation
 
+struct GitHubPullRequest: Codable {
+    let state: String
+    let mergedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case state
+        case mergedAt = "merged_at"
+    }
+}
+
 struct PullRequestRef: Codable, Hashable {
     let url: String?
 }
