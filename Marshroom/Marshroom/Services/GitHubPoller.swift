@@ -79,6 +79,16 @@ final class GitHubPoller {
                         issues[idx] = freshIssue
                         manager.issuesByRepo[item.repo.fullName] = issues
                     }
+
+                    // Check PR status for pending items — reset if PR closed without merge
+                    if item.status == .pending, let prNumber = item.prNumber {
+                        if let pr = try? await client.getPullRequest(
+                            repo: item.repo.fullName, number: prNumber
+                        ), pr.state == "closed", pr.mergedAt == nil {
+                            manager.resetPendingCartItem(item)
+                            changed = true
+                        }
+                    }
                 }
             } catch {
                 // Silently skip individual issue fetch failures

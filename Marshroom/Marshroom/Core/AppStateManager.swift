@@ -158,6 +158,14 @@ final class AppStateManager {
         syncStateFile()
     }
 
+    func resetPendingCartItem(_ item: CartItem) {
+        guard let idx = todayCart.firstIndex(where: { $0.id == item.id }) else { return }
+        todayCart[idx].status = .soon
+        todayCart[idx].prNumber = nil
+        todayCart[idx].prURL = nil
+        syncStateFile()
+    }
+
     // MARK: - Issue Creation
 
     func createIssue(repo: String, title: String, body: String?) async throws -> GitHubIssue {
