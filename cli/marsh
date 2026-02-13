@@ -345,21 +345,57 @@ cmd_pr() {
     exit 1
   }
 
-  # Find cart entry matching current branch
-  local entry
-  entry=$(echo "$state" | jq --arg repo "$owner_repo" --arg branch "$branch" '
+  # Get all cart entries for this repo
+  local entries
+  entries=$(echo "$state" | jq --arg repo "$owner_repo" '
     .cart // [] | map(
       select(
-        (
-          (.repoFullName // "") == $repo or
-          ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
-          ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
-        ) and (.branchName // "") == $branch
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
       )
-    ) | first // null')
+    )')
 
-  if [[ "$entry" == "null" ]]; then
-    echo "Error: No cart entry found for branch '${branch}' in ${owner_repo}." >&2
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "Error: No cart entries found for repo ${owner_repo}." >&2
+    exit 1
+  fi
+
+  # Tier 1: Exact branch name match
+  local entry=""
+  entry=$(echo "$entries" | jq --arg b "$branch" '
+    map(select((.branchName // "") == $b)) | first // null')
+  [[ "$entry" == "null" ]] && entry=""
+
+  # Tier 2: Single entry or sole runner
+  if [[ -z "$entry" ]]; then
+    if [[ "$count" -eq 1 ]]; then
+      # Only one cart entry for this repo → use it
+      entry=$(echo "$entries" | jq 'first')
+    else
+      # Check if exactly one entry is "running"
+      local running_count
+      running_count=$(echo "$entries" | jq '[.[] | select(.status == "running")] | length')
+      if [[ "$running_count" -eq 1 ]]; then
+        entry=$(echo "$entries" | jq '[.[] | select(.status == "running")] | first')
+      fi
+    fi
+  fi
+
+  # Tier 3: Still no match → provide helpful error
+  if [[ -z "$entry" ]]; then
+    echo "Error: Cannot determine cart entry for branch '${branch}' in ${owner_repo}." >&2
+    echo "" >&2
+    echo "Available cart entries:" >&2
+    echo "$entries" | jq -r '.[] | "  • #\(.issueNumber) \(.issueTitle) [\(.status)] - branch: \(.branchName)"' >&2
+    echo "" >&2
+    echo "Suggestions:" >&2
+    echo "  1. Switch to one of the branches listed above" >&2
+    echo "  2. If you have only one 'running' issue, set it to 'running' status in the app" >&2
+    echo "  3. Ensure your branch name matches a cart entry's branch" >&2
     exit 1
   fi
 
