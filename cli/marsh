@@ -364,10 +364,23 @@ cmd_pr() {
     exit 1
   fi
 
-  # Tier 1: Exact branch name match
+  # Tier 1: Branch name match (exact or by issue number)
+  # Extract issue number pattern (e.g., "HotFix/#23" or "Feature/#23" → "#23")
+  local issue_pattern=""
+  if [[ "$branch" =~ /#[0-9]+$ ]]; then
+    issue_pattern="${BASH_REMATCH[0]}"
+  fi
+
   local entry=""
-  entry=$(echo "$entries" | jq --arg b "$branch" '
-    map(select((.branchName // "") == $b)) | first // null')
+  if [[ -n "$issue_pattern" ]]; then
+    # Match by issue number pattern (handles HotFix/#N vs Feature/#N)
+    entry=$(echo "$entries" | jq --arg pattern "$issue_pattern" '
+      map(select((.branchName // "") | endswith($pattern))) | first // null')
+  else
+    # Fallback to exact branch name match
+    entry=$(echo "$entries" | jq --arg b "$branch" '
+      map(select((.branchName // "") == $b)) | first // null')
+  fi
   [[ "$entry" == "null" ]] && entry=""
 
   # Tier 2: Single entry or sole runner
