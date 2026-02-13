@@ -3,10 +3,43 @@ import Foundation
 struct GitHubPullRequest: Codable {
     let state: String
     let mergedAt: String?
+    let comments: Int
+    let reviewComments: Int
+    let requestedReviewers: [Reviewer]?
+    let requestedTeams: [Team]?
 
     enum CodingKeys: String, CodingKey {
         case state
         case mergedAt = "merged_at"
+        case comments
+        case reviewComments = "review_comments"
+        case requestedReviewers = "requested_reviewers"
+        case requestedTeams = "requested_teams"
+    }
+
+    struct Reviewer: Codable {
+        let login: String
+    }
+
+    struct Team: Codable {
+        let name: String
+    }
+}
+
+struct GitHubPullRequestReview: Codable {
+    let id: Int
+    let user: ReviewUser
+    let state: String  // "APPROVED", "CHANGES_REQUESTED", "COMMENTED"
+    let submittedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, user, state
+        case submittedAt = "submitted_at"
+    }
+
+    struct ReviewUser: Codable {
+        let login: String
+        let type: String  // "User" or "Bot"
     }
 }
 

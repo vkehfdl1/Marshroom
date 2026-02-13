@@ -87,26 +87,38 @@ struct MenuBarView: View {
             Divider()
 
             // Footer
-            Button {
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                if let window = NSApplication.shared.windows.first(where: { $0.title == "Marshroom" || $0.className.contains("SwiftUI") }) {
-                    window.makeKeyAndOrderFront(nil)
+            HStack(spacing: 8) {
+                // Reset Day button
+                Button {
+                    appState.manuallyResetDay()
+                } label: {
+                    Image(systemName: "arrow.clockwise.circle")
                 }
-            } label: {
-                HStack {
-                    Image(systemName: "macwindow")
-                    Text("Open Marshroom")
+                .buttonStyle(.plain)
+                .help("Reset today's completion count")
+
+                Divider()
+                    .frame(height: 16)
+
+                // Open Marshroom button (existing)
+                Button {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                    if let window = NSApplication.shared.windows.first(where: { $0.title == "Marshroom" || $0.className.contains("SwiftUI") }) {
+                        window.makeKeyAndOrderFront(nil)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "macwindow")
+                        Text("Open Marshroom")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
         .frame(width: 300)
-        .onAppear {
-            appState.resetCompletionsIfNewDay()
-        }
     }
 }
 
@@ -115,10 +127,18 @@ private struct MenuBarIssueRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: item.status.iconName)
-                .font(.caption)
-                .foregroundStyle(item.status.color)
-                .frame(width: 16)
+            // Show sub-status icon if available, otherwise main status icon
+            if let subStatus = item.pendingSubStatus {
+                Image(systemName: subStatus.iconName)
+                    .font(.caption)
+                    .foregroundStyle(subStatus.color)
+                    .frame(width: 16)
+            } else {
+                Image(systemName: item.status.iconName)
+                    .font(.caption)
+                    .foregroundStyle(item.status.color)
+                    .frame(width: 16)
+            }
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {

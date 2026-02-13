@@ -45,6 +45,10 @@ actor GitHubAPIClient {
         return try await request(endpoint: "/repos/\(repo)/pulls/\(number)")
     }
 
+    func getPullRequestReviews(repo: String, number: Int) async throws -> [GitHubPullRequestReview] {
+        return try await request(endpoint: "/repos/\(repo)/pulls/\(number)/reviews")
+    }
+
     // MARK: - Issue Creation
 
     func createIssue(repo: String, title: String, body: String?) async throws -> GitHubIssue {

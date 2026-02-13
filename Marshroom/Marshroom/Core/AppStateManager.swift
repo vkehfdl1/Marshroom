@@ -166,6 +166,13 @@ final class AppStateManager {
         syncStateFile()
     }
 
+    func updateCartItemPRDetails(_ item: CartItem, pr: GitHubPullRequest, hasChangesRequested: Bool) {
+        guard let idx = todayCart.firstIndex(where: { $0.id == item.id }) else { return }
+        todayCart[idx].prDetails = pr
+        todayCart[idx].hasChangesRequested = hasChangesRequested
+        // Note: No syncStateFile() - this is cached data, not persisted
+    }
+
     // MARK: - Issue Creation
 
     func createIssue(repo: String, title: String, body: String?) async throws -> GitHubIssue {
@@ -223,6 +230,18 @@ final class AppStateManager {
             todayCompletions = 0
             todayCompletionsDate = today
         }
+    }
+
+    /// Manually reset today's completion count and remove completed items (user-initiated)
+    func manuallyResetDay() {
+        // Reset counter
+        todayCompletions = 0
+        todayCompletionsDate = Constants.dateOnlyFormatter.string(from: Date())
+
+        // Remove all completed items from cart
+        todayCart.removeAll { $0.status == .completed }
+
+        syncStateFile()
     }
 
     // MARK: - Highlight Repos Persistence

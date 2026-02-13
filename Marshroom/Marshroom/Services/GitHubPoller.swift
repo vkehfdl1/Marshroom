@@ -62,16 +62,9 @@ final class GitHubPoller {
                 )
 
                 if freshIssue.state == "closed" {
-                    // Mark as completed, then schedule removal
+                    // Mark as completed and keep in cart until manual reset
                     manager.updateCartItemStatus(item, to: .completed)
                     changed = true
-
-                    // Remove after a brief delay so UI can show completed state
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .seconds(3))
-                        manager.todayCart.removeAll { $0.id == item.id }
-                        manager.syncStateFile()
-                    }
                 } else {
                     // Update cached issue data
                     if var issues = manager.issuesByRepo[item.repo.fullName],
@@ -80,13 +73,40 @@ final class GitHubPoller {
                         manager.issuesByRepo[item.repo.fullName] = issues
                     }
 
-                    // Check PR status for pending items — reset if PR closed without merge
+                    // Check PR status for pending items
                     if item.status == .pending, let prNumber = item.prNumber {
-                        if let pr = try? await client.getPullRequest(
-                            repo: item.repo.fullName, number: prNumber
-                        ), pr.state == "closed", pr.mergedAt == nil {
-                            manager.resetPendingCartItem(item)
+                        do {
+                            // Fetch full PR details
+                            let pr = try await client.getPullRequest(
+                                repo: item.repo.fullName,
+                                number: prNumber
+                            )
+
+                            // Reset if PR closed without merge
+                            if pr.state == "closed", pr.mergedAt == nil {
+                                manager.resetPendingCartItem(item)
+                                changed = true
+                                continue
+                            }
+
+                            // Fetch reviews to detect changes requested
+                            let reviews = try await client.getPullRequestReviews(
+                                repo: item.repo.fullName,
+                                number: prNumber
+                            )
+
+                            // Check if any human reviewer requested changes
+                            let hasChangesRequested = reviews.contains { review in
+                                review.state == "CHANGES_REQUESTED" &&
+                                review.user.type != "Bot"
+                            }
+
+                            // Update cart item with PR details
+                            manager.updateCartItemPRDetails(item, pr: pr, hasChangesRequested: hasChangesRequested)
                             changed = true
+
+                        } catch {
+                            // Silently skip if API call fails
                         }
                     }
                 }

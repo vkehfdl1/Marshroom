@@ -18,7 +18,7 @@ actor AnthropicClient {
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-        let systemPrompt = "You are a GitHub issue title generator. Given raw developer thoughts and optional project context (CLAUDE.md), generate a concise, simple, and clear issue title. Title should be short as possible. Output ONLY the title, nothing else."
+        let systemPrompt = "You are a GitHub issue title generator. Given raw developer thoughts and optional project context (CLAUDE.md), generate a compact issue title. Rules: Do NOT start with a verb (no 'Add', 'Implement', 'Fix', 'Create', etc). Just the feature or topic name. Keep it short for tmux display. Output ONLY the title, nothing else."
 
         var userContent = "Repository: \(repoName)\n\nRaw input:\n\(rawInput)"
         if let claudeMd, !claudeMd.isEmpty {
@@ -26,7 +26,7 @@ actor AnthropicClient {
         }
 
         let body: [String: Any] = [
-            "model": "claude-haiku-4-5-20251001",
+            "model": "claude-sonnet-4-5-20250929",
             "max_tokens": 100,
             "system": systemPrompt,
             "messages": [

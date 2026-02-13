@@ -43,6 +43,7 @@
 		AA000041 /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000041 /* AnthropicClient.swift */; };
 		AA000042 /* IssueComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000042 /* IssueComposerView.swift */; };
 		AA000043 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000043 /* AISettingsView.swift */; };
+		AA000044 /* PendingSubStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000044 /* PendingSubStatus.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +94,7 @@
 		BB000041 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
 		BB000042 /* IssueComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IssueComposerView.swift; sourceTree = "<group>"; };
 		BB000043 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		BB000044 /* PendingSubStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingSubStatus.swift; sourceTree = "<group>"; };
 		EE000001 /* Marshroom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Marshroom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE000002 /* MarshroomTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MarshroomTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -194,6 +196,7 @@
 				BB000010 /* CartItem.swift */,
 				BB000011 /* MarshroomState.swift */,
 				BB000040 /* IssueStatus.swift */,
+				BB000044 /* PendingSubStatus.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -405,6 +408,7 @@
 				AA000041 /* AnthropicClient.swift in Sources */,
 				AA000042 /* IssueComposerView.swift in Sources */,
 				AA000043 /* AISettingsView.swift in Sources */,
+				AA000044 /* PendingSubStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
