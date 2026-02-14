@@ -138,6 +138,16 @@ final class AppStateManager {
 
         todayCart.append(item)
         syncStateFile()
+
+        if let apiClient, let login = currentUser?.login {
+            Task {
+                try? await apiClient.assignIssue(
+                    repo: repo.fullName,
+                    number: issue.number,
+                    assignees: [login]
+                )
+            }
+        }
     }
 
     func removeIssueFromCart(_ item: CartItem) {

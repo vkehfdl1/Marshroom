@@ -60,6 +60,20 @@ actor GitHubAPIClient {
         return try await request(endpoint: "/repos/\(repo)/issues", method: "POST", body: payload)
     }
 
+    // MARK: - Issue Assignment
+
+    @discardableResult
+    func assignIssue(repo: String, number: Int, assignees: [String]) async throws -> GitHubIssue {
+        struct AssignIssueBody: Encodable {
+            let assignees: [String]
+        }
+        return try await request(
+            endpoint: "/repos/\(repo)/issues/\(number)/assignees",
+            method: "POST",
+            body: AssignIssueBody(assignees: assignees)
+        )
+    }
+
     // MARK: - File Content
 
     func fetchFileContent(repo: String, path: String) async throws -> String {
