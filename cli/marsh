@@ -68,6 +68,43 @@ status_label() {
   esac
 }
 
+# Resolve a cart entry by matching branch name against entries JSON.
+# Three-tier matching:
+#   Tier 1a: exact branchName match
+#   Tier 1b: /#N suffix match (HotFix/#20 matches Feature/#20)
+# Outputs: matched entry JSON, or "null" if no match.
+resolve_entry_by_branch() {
+  local entries="$1"
+  local branch="$2"
+
+  if [[ -z "$branch" ]]; then
+    echo "null"
+    return
+  fi
+
+  # Tier 1a: exact branchName match
+  local entry
+  entry=$(echo "$entries" | jq --arg b "$branch" '
+    map(select((.branchName // "") == $b)) | first // null')
+  if [[ "$entry" != "null" ]]; then
+    echo "$entry"
+    return
+  fi
+
+  # Tier 1b: /#N suffix match (handles HotFix/#N vs Feature/#N)
+  if [[ "$branch" =~ /#[0-9]+$ ]]; then
+    local suffix="${BASH_REMATCH[0]}"
+    entry=$(echo "$entries" | jq --arg s "$suffix" '
+      map(select((.branchName // "") | endswith($s))) | first // null')
+    if [[ "$entry" != "null" ]]; then
+      echo "$entry"
+      return
+    fi
+  fi
+
+  echo "null"
+}
+
 # ─── Subcommands ────────────────────────────────────────────────────
 
 cmd_hud() {
@@ -108,13 +145,12 @@ cmd_hud() {
     return 0
   fi
 
-  # Tier 1: Match current branch to a cart entry's branchName
+  # Tier 1: Match current branch to a cart entry (exact or /#N suffix)
   local branch entry=""
   branch=$(git branch --show-current 2>/dev/null) || branch=""
 
   if [[ -n "$branch" ]]; then
-    entry=$(echo "$entries" | jq --arg b "$branch" '
-      map(select((.branchName // "") == $b)) | first // null')
+    entry=$(resolve_entry_by_branch "$entries" "$branch")
     [[ "$entry" == "null" ]] && entry=""
   fi
 
@@ -266,11 +302,19 @@ cmd_status() {
     return 0
   fi
 
-  local current_branch
+  local current_branch matched_num=""
   current_branch=$(git branch --show-current 2>/dev/null) || current_branch=""
 
-  echo "$entries" | jq -r --arg cb "$current_branch" '.[] |
-    (if (.branchName // "") == $cb and $cb != "" then "→ " else "  " end) +
+  if [[ -n "$current_branch" ]]; then
+    local matched
+    matched=$(resolve_entry_by_branch "$entries" "$current_branch")
+    if [[ "$matched" != "null" ]]; then
+      matched_num=$(echo "$matched" | jq -r '.issueNumber')
+    fi
+  fi
+
+  echo "$entries" | jq -r --arg mn "$matched_num" '.[] |
+    (if $mn != "" and (.issueNumber | tostring) == $mn then "→ " else "  " end) +
     "#\(.issueNumber) \(.issueTitle)\n    Status: \(.status // "soon") | Branch: \(.branchName // "—")\(.prURL // "" | if . != "" then "\n    PR: \(.)" else "" end)\n"'
 }
 
@@ -364,23 +408,9 @@ cmd_pr() {
     exit 1
   fi
 
-  # Tier 1: Branch name match (exact or by issue number)
-  # Extract issue number pattern (e.g., "HotFix/#23" or "Feature/#23" → "#23")
-  local issue_pattern=""
-  if [[ "$branch" =~ /#[0-9]+$ ]]; then
-    issue_pattern="${BASH_REMATCH[0]}"
-  fi
-
+  # Tier 1: Branch name match (exact or /#N suffix)
   local entry=""
-  if [[ -n "$issue_pattern" ]]; then
-    # Match by issue number pattern (handles HotFix/#N vs Feature/#N)
-    entry=$(echo "$entries" | jq --arg pattern "$issue_pattern" '
-      map(select((.branchName // "") | endswith($pattern))) | first // null')
-  else
-    # Fallback to exact branch name match
-    entry=$(echo "$entries" | jq --arg b "$branch" '
-      map(select((.branchName // "") == $b)) | first // null')
-  fi
+  entry=$(resolve_entry_by_branch "$entries" "$branch")
   [[ "$entry" == "null" ]] && entry=""
 
   # Tier 2: Single entry or sole runner
@@ -471,6 +501,137 @@ cmd_pr() {
   fi
 }
 
+cmd_next() {
+  local any_repo=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --any) any_repo=true; shift ;;
+      *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+  done
+
+  local state
+  state=$(read_state)
+
+  if [[ "$state" == "{}" ]]; then
+    echo "No state.json found." >&2
+    exit 1
+  fi
+
+  local entries
+  if [[ "$any_repo" == true ]]; then
+    entries=$(echo "$state" | jq '.cart // [] | map(select(.status == "soon"))')
+  else
+    local owner_repo
+    owner_repo=$(detect_repo)
+    entries=$(echo "$state" | jq --arg repo "$owner_repo" '
+      .cart // [] | map(
+        select(
+          (.status == "soon") and (
+            (.repoFullName // "") == $repo or
+            ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+            ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+          )
+        )
+      )')
+  fi
+
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "No 'soon' items found." >&2
+    exit 1
+  fi
+
+  # FIFO: first entry in cart array
+  local next
+  next=$(echo "$entries" | jq 'first')
+
+  # JSON to stdout (machine-readable)
+  echo "$next" | jq '{issueNumber, issueTitle, branchName, issueBody, status, repoFullName}'
+
+  # Human summary to stderr
+  local num title repo
+  num=$(echo "$next" | jq -r '.issueNumber')
+  title=$(echo "$next" | jq -r '.issueTitle')
+  repo=$(echo "$next" | jq -r '.repoFullName // "unknown"')
+  echo "Next: #${num} ${title} (${repo})" >&2
+}
+
+cmd_heal() {
+  local state owner_repo
+  state=$(read_state)
+  owner_repo=$(detect_repo)
+
+  local entries
+  entries=$(echo "$state" | jq --arg repo "$owner_repo" '
+    .cart // [] | map(
+      select(
+        (.repoFullName // "") == $repo or
+        ((.repoCloneURL // "") | gsub("https://github.com/"; "") | gsub("\\.git$"; "")) == $repo or
+        ((.repoSSHURL // "")   | gsub("git@github.com:"; "")    | gsub("\\.git$"; "")) == $repo
+      )
+    )')
+
+  local count
+  count=$(echo "$entries" | jq 'length')
+
+  if [[ "$count" -eq 0 ]]; then
+    echo "🍄 No cart entries for ${owner_repo}." >&2
+    return 0
+  fi
+
+  local changed=false
+  local updated="$state"
+
+  for ((i = 0; i < count; i++)); do
+    local entry status branch issue_num
+    entry=$(echo "$entries" | jq --argjson i "$i" '.[$i]')
+    status=$(echo "$entry" | jq -r '.status // "soon"')
+    branch=$(echo "$entry" | jq -r '.branchName // ""')
+    issue_num=$(echo "$entry" | jq -r '.issueNumber')
+
+    case "$status" in
+      soon)
+        # Branch exists locally → should be running
+        if [[ -n "$branch" ]] && git rev-parse --verify "$branch" &>/dev/null; then
+          echo "🔧 #${issue_num}: soon → running (branch '${branch}' exists)" >&2
+          updated=$(echo "$updated" | jq --argjson n "$issue_num" '
+            .cart |= map(if .issueNumber == $n then .status = "running" else . end)')
+          changed=true
+        fi
+        ;;
+      running)
+        # PR exists on GitHub → should be pending
+        if [[ -n "$branch" ]] && command -v gh &>/dev/null; then
+          local pr_json
+          pr_json=$(gh pr list --repo "$owner_repo" --head "$branch" --json number,url --jq 'first // empty' 2>/dev/null) || true
+          if [[ -n "$pr_json" ]]; then
+            local pr_num pr_url
+            pr_num=$(echo "$pr_json" | jq -r '.number')
+            pr_url=$(echo "$pr_json" | jq -r '.url')
+            echo "🔧 #${issue_num}: running → pending (PR #${pr_num} found)" >&2
+            updated=$(echo "$updated" | jq \
+              --argjson n "$issue_num" \
+              --argjson prNum "$pr_num" \
+              --arg prUrl "$pr_url" \
+              '.cart |= map(if .issueNumber == $n then .status = "pending" | .prNumber = $prNum | .prURL = $prUrl else . end)')
+            changed=true
+          fi
+        fi
+        ;;
+    esac
+  done
+
+  if [[ "$changed" == true ]]; then
+    echo "$updated" | write_state
+    echo "🍄 Heal complete — state.json updated." >&2
+  else
+    echo "🍄 All entries healthy for ${owner_repo}." >&2
+  fi
+}
+
 cmd_help() {
   cat <<'HELP'
 🍄 marsh — Marshroom CLI
@@ -481,6 +642,8 @@ Commands:
   hud              Output tmux-formatted status string for current repo
   start [#N]       Mark a cart issue as running (prompts if multiple)
   status           Show cart entries for the current repo
+  next [--any]     Show next 'soon' cart item (JSON to stdout, summary to stderr)
+  heal             Detect and fix state.json vs git/GitHub mismatches
   open-ide [ide]   Open directory in IDE (pycharm, vscode; auto-detects if omitted)
   pr               Mark current branch's issue as pending (PR created)
   help             Show this help message
@@ -503,6 +666,9 @@ Examples:
   marsh open-ide vscode  # open in VSCode
   marsh open-ide pycharm # open in PyCharm
   marsh pr               # mark current branch as PR pending
+  marsh next             # JSON of next 'soon' item for current repo
+  marsh next --any       # JSON of next 'soon' item across all repos
+  marsh heal             # fix state.json mismatches for current repo
 HELP
 }
 
@@ -512,6 +678,8 @@ case "${1:-help}" in
   hud)      shift; cmd_hud "${1:-}" ;;
   start)    shift; cmd_start "${1:-}" ;;
   status)   cmd_status ;;
+  next)     shift; cmd_next "$@" ;;
+  heal)     cmd_heal ;;
   open-ide) shift; cmd_open_ide "${1:-}" ;;
   pr)       cmd_pr ;;
   help|--help|-h) cmd_help ;;

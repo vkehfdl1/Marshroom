@@ -5,10 +5,19 @@ description: Create a Pull Request for a Marshroom cart issue matching the curre
 
 Create a Pull Request for a Marshroom cart issue matching the current branch.
 
-Steps:
+## Critical Requirements
+
+- **state.json update is MANDATORY**. After creating the PR, you MUST update the issue status to `pending` with `prNumber` and `prURL` in `~/.config/marshroom/state.json`. If this fails, stop and report the error — do NOT silently continue.
+- Use `marsh pr` if available; otherwise fall back to direct `jq` atomic write (see step 9).
+
+## Steps
+
 1. Read `~/.config/marshroom/state.json` and parse the JSON
 2. Run `git branch --show-current` to get the current branch name
-3. Find the cart entry whose `branchName` matches the current git branch and current git repository. If no match, tell the user they're not on a cart issue branch
+3. Find the cart entry matching the current branch and repo. Use relaxed matching:
+   - First try exact `branchName` match
+   - Then try `/#N` suffix match (e.g., current branch `HotFix/#20` matches cart entry with `branchName: "Feature/#20"` because both end with `/#20`)
+   - If no match, tell the user they're not on a cart issue branch
 3-1. Commit the current changes. Give proper commit message to commits. Ask user permission if the changes are too large or suspicious (e.g. 100+ changes, dummy files, DB updates, logs, and so on)
 4. Push the current branch: `git push -u origin HEAD`
 5. Build the PR body:
@@ -23,7 +32,16 @@ Steps:
    - If `close #<issueNumber>` is NOT found in the body, fix it: `gh pr edit --body "$(gh pr view --json body -q '.body')\n\nclose #<issueNumber>"`
 8. Capture the PR URL and number:
    - Run `gh pr view --json number,url -q '.number,.url'`
-9. Update issue status: run `marsh pr` (if `marsh` is available in PATH). If `marsh` is not found, notify to user to install `marsh` command correctly.
+9. **Update issue status (MANDATORY)**:
+   - First try: `marsh pr`
+   - If `marsh` is not found in PATH, fall back to direct atomic update using the PR number and URL from step 8:
+     ```bash
+     TMP="$(mktemp ~/.config/marshroom/state.json.XXXXXX)"
+     jq --argjson n ISSUE_NUMBER --argjson prNum PR_NUMBER --arg prUrl "PR_URL" \
+       '.cart |= map(if .issueNumber == $n then .status = "pending" | .prNumber = $prNum | .prURL = $prUrl else . end)' \
+       ~/.config/marshroom/state.json > "$TMP" && mv -f "$TMP" ~/.config/marshroom/state.json
+     ```
+   - Verify the update succeeded by reading state.json and confirming status is `pending`
 10. Display the result:
     - PR URL
     - PR Number
