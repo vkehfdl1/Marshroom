@@ -15,6 +15,19 @@ struct CartItemView: View {
                         .font(.caption2)
                         .foregroundStyle(item.status.color)
 
+                    // Show sub-status for pending items
+                    if let subStatus = item.pendingSubStatus {
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Circle()
+                            .fill(subStatus.color)
+                            .frame(width: 8, height: 8)
+                        Text(subStatus.rawValue)
+                            .font(.caption2)
+                            .foregroundStyle(subStatus.color)
+                    }
+
                     if let prNumber = item.prNumber {
                         Text("PR #\(prNumber)")
                             .font(.caption2)

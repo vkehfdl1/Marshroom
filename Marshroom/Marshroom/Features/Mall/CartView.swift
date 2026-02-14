@@ -15,6 +15,10 @@ struct CartView: View {
         appState.todayCart.filter { $0.status == .pending }
     }
 
+    private var completedItems: [CartItem] {
+        appState.todayCart.filter { $0.status == .completed }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -84,13 +88,28 @@ struct CartView: View {
                     }
 
                     if !pendingItems.isEmpty {
-                        Section {
-                            ForEach(pendingItems) { item in
-                                CartItemView(item: item)
+                        // Group pending items by sub-status
+                        let pendingGroups = Dictionary(grouping: pendingItems) { item in
+                            item.pendingSubStatus ?? .justCreated
+                        }
+
+                        // Sort by sub-status order (1 → 4)
+                        let sortedSubStatuses = pendingGroups.keys.sorted { $0.order < $1.order }
+
+                        ForEach(sortedSubStatuses, id: \.self) { subStatus in
+                            if let items = pendingGroups[subStatus], !items.isEmpty {
+                                Section {
+                                    ForEach(items) { item in
+                                        CartItemView(item: item)
+                                    }
+                                } header: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: subStatus.iconName)
+                                        Text(subStatus.rawValue)
+                                    }
+                                    .foregroundStyle(subStatus.color)
+                                }
                             }
-                        } header: {
-                            Label("Pending", systemImage: IssueStatus.pending.iconName)
-                                .foregroundStyle(IssueStatus.pending.color)
                         }
                     }
 
@@ -104,12 +123,20 @@ struct CartView: View {
                                 .foregroundStyle(IssueStatus.soon.color)
                         }
                     }
+
+                    if !completedItems.isEmpty {
+                        Section {
+                            ForEach(completedItems) { item in
+                                CartItemView(item: item)
+                            }
+                        } header: {
+                            Label("Completed", systemImage: IssueStatus.completed.iconName)
+                                .foregroundStyle(IssueStatus.completed.color)
+                        }
+                    }
                 }
                 .listStyle(.inset)
             }
-        }
-        .onAppear {
-            appState.resetCompletionsIfNewDay()
         }
     }
 }

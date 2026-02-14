@@ -32,20 +32,6 @@ struct GeneralSettingsView: View {
                 }
             }
 
-            Section("Completion Tracking") {
-                Picker("Day resets at", selection: Binding(
-                    get: { appState.settings.completionResetHour },
-                    set: {
-                        appState.settings.completionResetHour = $0
-                        appState.resetCompletionsIfNewDay()
-                    }
-                )) {
-                    ForEach(0..<24, id: \.self) { hour in
-                        Text(String(format: "%02d:00", hour)).tag(hour)
-                    }
-                }
-            }
-
             Section("Polling") {
                 HStack {
                     Text("Interval: \(appState.settings.pollingIntervalSeconds)s")
