@@ -105,6 +105,49 @@ resolve_entry_by_branch() {
   echo "null"
 }
 
+# Resolve local directory for a repo given its full name and URLs.
+# Tier 1: localPath from state.json repos[]
+# Tier 2: Scan MARSH_AUTORUN_DIRS for matching git remote
+# Tier 3: Return 1 (not found)
+resolve_repo_dir() {
+  local repo_full_name="$1"
+  local repo_clone_url="${2:-}"
+  local repo_ssh_url="${3:-}"
+
+  local state
+  state=$(read_state)
+
+  # Tier 1: localPath from state.json repos[]
+  local local_path
+  local_path=$(echo "$state" | jq -r --arg repo "$repo_full_name" '
+    .repos // [] | map(select(.fullName == $repo)) | first // null | .localPath // empty')
+  if [[ -n "${local_path:-}" && -d "$local_path" ]]; then
+    echo "$local_path"
+    return 0
+  fi
+
+  # Tier 2: Scan MARSH_AUTORUN_DIRS
+  local search_dirs="${MARSH_AUTORUN_DIRS:-$HOME/xcode-projects:$HOME/projects:$HOME/repos:$HOME/src:$HOME/code}"
+  IFS=':' read -ra dirs <<< "$search_dirs"
+  for base_dir in "${dirs[@]}"; do
+    [[ -d "$base_dir" ]] || continue
+    for sub_dir in "$base_dir"/*/; do
+      [[ -d "$sub_dir/.git" ]] || continue
+      local remote
+      remote=$(git -C "$sub_dir" remote get-url origin 2>/dev/null) || continue
+      local found_repo
+      found_repo=$(extract_owner_repo "$remote")
+      if [[ "$found_repo" == "$repo_full_name" ]]; then
+        echo "${sub_dir%/}"
+        return 0
+      fi
+    done
+  done
+
+  # Tier 3: Not found
+  return 1
+}
+
 # ─── Subcommands ────────────────────────────────────────────────────
 
 cmd_hud() {
@@ -549,7 +592,7 @@ cmd_next() {
   next=$(echo "$entries" | jq 'first')
 
   # JSON to stdout (machine-readable)
-  echo "$next" | jq '{issueNumber, issueTitle, branchName, issueBody, status, repoFullName}'
+  echo "$next" | jq '{issueNumber, issueTitle, branchName, issueBody, status, repoFullName, repoCloneURL, repoSSHURL}'
 
   # Human summary to stderr
   local num title repo
@@ -632,6 +675,193 @@ cmd_heal() {
   fi
 }
 
+autorun_log() {
+  echo "[$(date '+%H:%M:%S')] $*" >&2
+}
+
+cmd_autorun() {
+  local agent="claude"
+  local max_issues=0
+  local cooldown=10
+  local dry_run=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --agent)    agent="$2"; shift 2 ;;
+      --max)      max_issues="$2"; shift 2 ;;
+      --cooldown) cooldown="$2"; shift 2 ;;
+      --dry-run)  dry_run=true; shift ;;
+      *)
+        echo "Unknown option: $1" >&2
+        echo "Usage: marsh autorun [--agent claude|codex] [--max N] [--cooldown SECONDS] [--dry-run]" >&2
+        exit 1
+        ;;
+    esac
+  done
+
+  # Preflight: verify agent CLI
+  case "$agent" in
+    claude)
+      if ! command -v claude &>/dev/null; then
+        echo "Error: 'claude' CLI not found in PATH." >&2
+        echo "Install: https://docs.anthropic.com/en/docs/claude-code" >&2
+        exit 1
+      fi
+      ;;
+    codex)
+      if ! command -v codex &>/dev/null; then
+        echo "Error: 'codex' CLI not found in PATH." >&2
+        exit 1
+      fi
+      ;;
+    *)
+      echo "Error: Unknown agent '${agent}'. Supported: claude, codex" >&2
+      exit 1
+      ;;
+  esac
+
+  # Create log directory
+  local log_dir="$HOME/.config/marshroom/autorun-logs"
+  mkdir -p "$log_dir"
+
+  # Counters
+  local processed=0 succeeded=0 failed=0 skipped=0
+
+  # Track skipped repos and seen issues to avoid infinite FIFO loop (colon-separated for bash 3 compat)
+  local skipped_repos=""
+  local seen_issues=""
+
+  # Signal handling
+  local stop_flag=false
+  local agent_pid=""
+  trap_handler() {
+    autorun_log "Caught signal — shutting down gracefully..."
+    stop_flag=true
+    if [[ -n "$agent_pid" ]] && kill -0 "$agent_pid" 2>/dev/null; then
+      autorun_log "Terminating agent process (PID $agent_pid)..."
+      kill "$agent_pid" 2>/dev/null || true
+      wait "$agent_pid" 2>/dev/null || true
+    fi
+  }
+  trap trap_handler SIGINT SIGTERM
+
+  autorun_log "🍄 marsh autorun — agent=${agent}, max=${max_issues:-unlimited}, cooldown=${cooldown}s, dry_run=${dry_run}"
+
+  while true; do
+    if [[ "$stop_flag" == true ]]; then
+      break
+    fi
+
+    # Check max limit
+    if [[ "$max_issues" -gt 0 && "$processed" -ge "$max_issues" ]]; then
+      autorun_log "Reached max issues limit (${max_issues}). Stopping."
+      break
+    fi
+
+    # Get next soon item
+    local next_json
+    next_json=$(cmd_next --any 2>/dev/null) || {
+      autorun_log "No more 'soon' items in cart. Done."
+      break
+    }
+
+    local issue_num issue_title repo_full_name repo_clone_url repo_ssh_url
+    issue_num=$(echo "$next_json" | jq -r '.issueNumber')
+    issue_title=$(echo "$next_json" | jq -r '.issueTitle')
+    repo_full_name=$(echo "$next_json" | jq -r '.repoFullName // ""')
+    repo_clone_url=$(echo "$next_json" | jq -r '.repoCloneURL // ""')
+    repo_ssh_url=$(echo "$next_json" | jq -r '.repoSSHURL // ""')
+
+    # Check if we've already seen this issue (avoid infinite loop in dry-run or on failure)
+    if [[ ":${seen_issues}:" == *":${issue_num}:"* ]]; then
+      autorun_log "Already processed #${issue_num} — no more new items. Stopping."
+      break
+    fi
+    seen_issues="${seen_issues}:${issue_num}"
+
+    # Check if we've already skipped this repo (avoid infinite loop)
+    if [[ ":${skipped_repos}:" == *":${repo_full_name}:"* ]]; then
+      autorun_log "All remaining items are in unresolvable repos. Stopping."
+      break
+    fi
+
+    autorun_log "Processing #${issue_num}: ${issue_title} (${repo_full_name})"
+
+    # Resolve local directory
+    local repo_dir
+    repo_dir=$(resolve_repo_dir "$repo_full_name" "$repo_clone_url" "$repo_ssh_url") || {
+      autorun_log "SKIP: Cannot resolve local directory for ${repo_full_name}"
+      skipped_repos="${skipped_repos}:${repo_full_name}"
+      skipped=$((skipped + 1))
+      continue
+    }
+
+    autorun_log "Resolved directory: ${repo_dir}"
+
+    if [[ "$dry_run" == true ]]; then
+      autorun_log "DRY RUN: Would run /run-issue #${issue_num} in ${repo_dir}"
+      processed=$((processed + 1))
+      succeeded=$((succeeded + 1))
+      continue
+    fi
+
+    # Spawn agent
+    local log_file="${log_dir}/autorun-$(date '+%Y%m%d-%H%M%S')-${issue_num}.log"
+    autorun_log "Spawning ${agent} for #${issue_num} — log: ${log_file}"
+
+    local exit_code=0
+    case "$agent" in
+      claude)
+        (cd "$repo_dir" && claude -p --dangerously-skip-permissions "/run-issue #${issue_num}") \
+          > "$log_file" 2>&1 &
+        agent_pid=$!
+        ;;
+      codex)
+        (cd "$repo_dir" && codex exec --sandbox danger-full-access "/run-issue #${issue_num}") \
+          > "$log_file" 2>&1 &
+        agent_pid=$!
+        ;;
+    esac
+
+    wait "$agent_pid" || exit_code=$?
+    agent_pid=""
+    processed=$((processed + 1))
+
+    if [[ "$exit_code" -eq 0 ]]; then
+      autorun_log "Completed #${issue_num} successfully"
+      succeeded=$((succeeded + 1))
+    else
+      autorun_log "FAILED #${issue_num} (exit code ${exit_code}) — see ${log_file}"
+      failed=$((failed + 1))
+    fi
+
+    # Heal state from repo dir
+    autorun_log "Running heal for ${repo_full_name}..."
+    (cd "$repo_dir" && cmd_heal) 2>/dev/null || true
+
+    if [[ "$stop_flag" == true ]]; then
+      break
+    fi
+
+    # Cooldown
+    if [[ "$cooldown" -gt 0 ]]; then
+      autorun_log "Cooldown ${cooldown}s..."
+      sleep "$cooldown" &
+      wait $! 2>/dev/null || true
+    fi
+  done
+
+  # Summary
+  autorun_log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  autorun_log "🍄 marsh autorun complete"
+  autorun_log "  Processed: ${processed}"
+  autorun_log "  Succeeded: ${succeeded}"
+  autorun_log "  Failed:    ${failed}"
+  autorun_log "  Skipped:   ${skipped}"
+  autorun_log "  Logs:      ${log_dir}/"
+  autorun_log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
 cmd_help() {
   cat <<'HELP'
 🍄 marsh — Marshroom CLI
@@ -646,12 +876,14 @@ Commands:
   heal             Detect and fix state.json vs git/GitHub mismatches
   open-ide [ide]   Open directory in IDE (pycharm, vscode; auto-detects if omitted)
   pr               Mark current branch's issue as pending (PR created)
+  autorun          Autonomous loop: pick soon items, run full GOAT lifecycle
   help             Show this help message
 
 State file: ~/.config/marshroom/state.json
 
 Environment variables:
-  MARSH_IDE        Default IDE when no argument given (pycharm, vscode)
+  MARSH_IDE            Default IDE when no argument given (pycharm, vscode)
+  MARSH_AUTORUN_DIRS   Colon-separated dirs to scan for repos (autorun)
 
 tmux integration (tpm):
   set -g @plugin 'vkehfdl1/Marshroom'
@@ -669,6 +901,10 @@ Examples:
   marsh next             # JSON of next 'soon' item for current repo
   marsh next --any       # JSON of next 'soon' item across all repos
   marsh heal             # fix state.json mismatches for current repo
+  marsh autorun          # run full GOAT lifecycle on all soon items
+  marsh autorun --max 3  # process at most 3 issues
+  marsh autorun --dry-run # preview what would be processed
+  marsh autorun --agent codex --cooldown 30  # use codex with 30s cooldown
 HELP
 }
 
@@ -682,6 +918,7 @@ case "${1:-help}" in
   heal)     cmd_heal ;;
   open-ide) shift; cmd_open_ide "${1:-}" ;;
   pr)       cmd_pr ;;
+  autorun)  shift; cmd_autorun "$@" ;;
   help|--help|-h) cmd_help ;;
   *)
     echo "Unknown command: $1" >&2
