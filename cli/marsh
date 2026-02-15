@@ -699,6 +699,14 @@ cmd_autorun() {
     esac
   done
 
+  # Validate numeric flags
+  if ! [[ "$max_issues" =~ ^[0-9]+$ ]]; then
+    echo "Error: --max must be a non-negative integer" >&2; exit 1
+  fi
+  if ! [[ "$cooldown" =~ ^[0-9]+$ ]]; then
+    echo "Error: --cooldown must be a non-negative integer" >&2; exit 1
+  fi
+
   # Preflight: verify agent CLI
   case "$agent" in
     claude)
@@ -781,8 +789,10 @@ cmd_autorun() {
 
     # Check if we've already skipped this repo (avoid infinite loop)
     if [[ ":${skipped_repos}:" == *":${repo_full_name}:"* ]]; then
-      autorun_log "All remaining items are in unresolvable repos. Stopping."
-      break
+      # Already know this repo is unresolvable; track as seen to avoid infinite loop
+      seen_issues="${seen_issues}:${issue_num}"
+      skipped=$((skipped + 1))
+      continue
     fi
 
     autorun_log "Processing #${issue_num}: ${issue_title} (${repo_full_name})"
@@ -812,7 +822,7 @@ cmd_autorun() {
     local exit_code=0
     case "$agent" in
       claude)
-        (cd "$repo_dir" && claude -p --dangerously-skip-permissions "/run-issue #${issue_num}") \
+        (cd "$repo_dir" && claude -p "/run-issue #${issue_num}") \
           > "$log_file" 2>&1 &
         agent_pid=$!
         ;;
