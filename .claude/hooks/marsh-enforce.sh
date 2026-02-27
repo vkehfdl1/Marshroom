@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-STATE_FILE="$HOME/.config/marshroom/state.json"
+STATE_FILE="${MARSHROOM_STATE:-$HOME/.config/marshroom/state.json}"
 
 # Read hook input from stdin
 INPUT=$(cat)

@@ -7,12 +7,12 @@ Start working on a Marshroom cart issue in the current repository.
 
 ## Critical Requirements
 
-- **state.json update is MANDATORY**. After creating the branch, you MUST update the issue status to `running` in `~/.config/marshroom/state.json`. If this fails, stop and report the error — do NOT silently continue.
+- **state.json update is MANDATORY**. After creating the branch, you MUST update the issue status to `running` in `${MARSHROOM_STATE:-~/.config/marshroom/state.json}`. If this fails, stop and report the error — do NOT silently continue.
 - Use `marsh start` if available; otherwise fall back to direct `jq` atomic write (see step 10).
 
 ## Steps
 
-1. Read `~/.config/marshroom/state.json` and parse the JSON
+1. Read `${MARSHROOM_STATE:-~/.config/marshroom/state.json}` and parse the JSON
 2. Extract the `cart` array. If the cart is empty, tell the user to add issues in the Marshroom app
 3. Run `git remote get-url origin` to get the current repo's remote URL
 4. Extract `owner/repo` from the remote URL (handle both HTTPS and SSH formats)
@@ -25,9 +25,10 @@ Start working on a Marshroom cart issue in the current repository.
     - First try: `marsh start #{issueNumber}`
     - If `marsh` is not found in PATH, fall back to direct atomic update:
       ```bash
-      TMP="$(mktemp ~/.config/marshroom/state.json.XXXXXX)"
+      STATE_FILE="${MARSHROOM_STATE:-~/.config/marshroom/state.json}"
+      TMP="$(mktemp "${STATE_FILE}.XXXXXX")"
       jq --argjson n ISSUE_NUMBER '.cart |= map(if .issueNumber == $n then .status = "running" else . end)' \
-        ~/.config/marshroom/state.json > "$TMP" && mv -f "$TMP" ~/.config/marshroom/state.json
+        "$STATE_FILE" > "$TMP" && mv -f "$TMP" "$STATE_FILE"
       ```
     - Verify the update succeeded by reading state.json and confirming status is `running`
 11. Inject issue context:

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-STATE_FILE="$HOME/.config/marshroom/state.json"
+STATE_FILE="${MARSHROOM_STATE:-$HOME/.config/marshroom/state.json}"
 
 # ─── Dependency check ───────────────────────────────────────────────
 
@@ -648,9 +648,10 @@ Commands:
   pr               Mark current branch's issue as pending (PR created)
   help             Show this help message
 
-State file: ~/.config/marshroom/state.json
+State file: ${MARSHROOM_STATE:-~/.config/marshroom/state.json}
 
 Environment variables:
+  MARSHROOM_STATE  Override state.json path (for multi-machine setups)
   MARSH_IDE        Default IDE when no argument given (pycharm, vscode)
 
 tmux integration (tpm):

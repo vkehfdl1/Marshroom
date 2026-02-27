@@ -12,6 +12,6 @@ struct SettingsWindow: View {
             AISettingsView()
                 .tabItem { Label("AI", systemImage: "sparkles") }
         }
-        .frame(width: 450, height: 350)
+        .frame(width: 450, height: 420)
     }
 }
