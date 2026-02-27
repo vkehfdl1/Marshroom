@@ -6,7 +6,7 @@ description: Validate the current Pull Request branch name, body, and status aga
 Validate the current Pull Request against Marshroom conventions.
 
 Steps:
-1. Read `~/.config/marshroom/state.json` and parse the JSON
+1. Read `${MARSHROOM_STATE:-~/.config/marshroom/state.json}` and parse the JSON
 2. Run `git branch --show-current` to get the current branch name
 3. Find the cart entry whose `branchName` matches the current git branch. If no match, tell the user they're not on a cart issue branch
 4. Get the current PR info: `gh pr view --json title,body,headRefName`

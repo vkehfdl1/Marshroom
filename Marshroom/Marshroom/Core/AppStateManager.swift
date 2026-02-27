@@ -26,6 +26,7 @@ final class AppStateManager {
     private(set) var anthropicClient: AnthropicClient?
     private var poller: GitHubPoller?
     private var fileWatcherSource: DispatchSourceFileSystemObject?
+    private var filePollingTimer: Timer?
     private var lastSelfWriteTime: Date = .distantPast
 
     // CLAUDE.md cache (repo fullName → content)
@@ -342,6 +343,16 @@ final class AppStateManager {
     func startFileWatcher() {
         stopFileWatcher()
 
+        if Constants.stateFileIsRemote {
+            // NFS/remote paths: kqueue can't detect remote changes, use stat polling
+            filePollingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handleExternalStateChange()
+                }
+            }
+            return
+        }
+
         let dirPath = Constants.stateFileDirectory
         let fd = open(dirPath, O_EVTONLY)
         guard fd >= 0 else { return }
@@ -369,6 +380,14 @@ final class AppStateManager {
     func stopFileWatcher() {
         fileWatcherSource?.cancel()
         fileWatcherSource = nil
+        filePollingTimer?.invalidate()
+        filePollingTimer = nil
+    }
+
+    func restartFileWatcher() {
+        stopFileWatcher()
+        startFileWatcher()
+        restoreCartFromStateFile()
     }
 
     private func handleExternalStateChange() {

@@ -19,7 +19,7 @@ docs/                   — Architecture & user documentation
 - async/await concurrency throughout
 - Keychain: GitHub PAT + Anthropic API key (separate entries)
 - UserDefaults: settings via `SettingsStorage`
-- `~/.config/marshroom/state.json`: bridge between macOS app, CLI, and Claude Code skills
+- `~/.config/marshroom/state.json`: bridge between macOS app, CLI, and Claude Code skills (overridable via `MARSHROOM_STATE` env var)
 
 ## Build
 ```bash
@@ -44,7 +44,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configurati
 - `marsh status` — show cart items for current repo (marks current branch with `→`)
 - `marsh open-ide [pycharm|vscode]` — open IDE for current directory (auto-detects if omitted)
 - `marsh pr` — set status to "pending", store PR number/URL
-- Reads/writes `~/.config/marshroom/state.json` atomically
+- Reads/writes `${MARSHROOM_STATE:-~/.config/marshroom/state.json}` atomically
 
 ### 3. Claude Code Skills (.claude/commands/)
 - `/start-issue` — read state.json, create branch, inject CLAUDE.md + issue body context, call `marsh start`
@@ -59,6 +59,7 @@ xcodebuild -project Marshroom/Marshroom.xcodeproj -scheme Marshroom -configurati
 - **Repo matching**: skills + CLI detect repo via `git remote get-url origin`, match against state.json URLs
 - **Smart Ingestion**: raw idea → Claude Haiku generates optimized title → GitHub issue created
 - **CLAUDE.md cache**: fetched via GitHub Contents API, cached in state.json RepoEntry, TTL 1 hour
+- **Multi-machine**: `MARSHROOM_STATE` env var overrides state.json path; NFS mount + Tailscale enables shared state across machines. App uses poll-based watching for remote paths (kqueue can't detect NFS changes)
 
 ## Status Pipeline
 | Status | Meaning | Set By |

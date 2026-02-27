@@ -22,6 +22,10 @@ final class SettingsStorage {
         didSet { UserDefaults.standard.set(completionResetHour, forKey: Keys.completionResetHour) }
     }
 
+    var customStateFilePath: String? {
+        didSet { UserDefaults.standard.set(customStateFilePath, forKey: Keys.customStateFilePath) }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         let interval = defaults.integer(forKey: Keys.pollingInterval)
@@ -31,6 +35,7 @@ final class SettingsStorage {
         self.selectedRepoFullName = defaults.string(forKey: Keys.selectedRepo)
         let resetHour = defaults.object(forKey: Keys.completionResetHour) as? Int
         self.completionResetHour = resetHour ?? 0
+        self.customStateFilePath = defaults.string(forKey: Keys.customStateFilePath)
     }
 
     // MARK: - Highlight Repos Persistence
@@ -56,5 +61,6 @@ final class SettingsStorage {
         static let selectedRepo = "selectedRepoFullName"
         static let highlightReposData = "highlightReposData"
         static let completionResetHour = "completionResetHour"
+        static let customStateFilePath = "customStateFilePath"
     }
 }

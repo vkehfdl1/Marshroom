@@ -5,6 +5,7 @@ struct GeneralSettingsView: View {
     @State private var showPATAlert = false
     @State private var newPAT = ""
     @State private var patUpdateMessage: String?
+    @State private var stateFilePath: String = ""
 
     var body: some View {
         Form {
@@ -45,8 +46,47 @@ struct GeneralSettingsView: View {
                     )
                 }
             }
+
+            Section("State File") {
+                HStack {
+                    TextField("Path", text: $stateFilePath)
+                        .textFieldStyle(.roundedBorder)
+                    Button("Browse") {
+                        let panel = NSOpenPanel()
+                        panel.canChooseFiles = true
+                        panel.canChooseDirectories = false
+                        panel.allowedContentTypes = [.json]
+                        panel.directoryURL = URL(fileURLWithPath: (stateFilePath as NSString).deletingLastPathComponent)
+                        if panel.runModal() == .OK, let url = panel.url {
+                            stateFilePath = url.path
+                            applyStateFilePath()
+                        }
+                    }
+                    Button("Reset") {
+                        stateFilePath = Constants.defaultStateFilePath
+                        appState.settings.customStateFilePath = nil
+                        appState.restartFileWatcher()
+                    }
+                    .foregroundStyle(.secondary)
+                }
+
+                if Constants.stateFileIsRemote {
+                    Label("Remote path detected — using poll-based file watching", systemImage: "network")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let envPath = ProcessInfo.processInfo.environment["MARSHROOM_STATE"], !envPath.isEmpty {
+                    Label("Overridden by MARSHROOM_STATE env var: \(envPath)", systemImage: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
         }
         .formStyle(.grouped)
+        .onAppear {
+            stateFilePath = Constants.stateFilePath
+        }
         .sheet(isPresented: $showPATAlert) {
             VStack(spacing: 16) {
                 Text("Update Personal Access Token")
@@ -77,6 +117,16 @@ struct GeneralSettingsView: View {
             }
             .padding()
         }
+    }
+
+    private func applyStateFilePath() {
+        let path = stateFilePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if path == Constants.defaultStateFilePath || path.isEmpty {
+            appState.settings.customStateFilePath = nil
+        } else {
+            appState.settings.customStateFilePath = path
+        }
+        appState.restartFileWatcher()
     }
 
     private func updatePAT() {

@@ -343,9 +343,9 @@ Stored in macOS Keychain (separate from the GitHub PAT). Used exclusively for Sm
 
 ### state.json
 
-Location: `~/.config/marshroom/state.json`
+Location: `${MARSHROOM_STATE:-~/.config/marshroom/state.json}`
 
-This file is the bridge between the macOS app and all external tools (Claude Code skills, `marsh` CLI, tmux HUD). It is written atomically to prevent read conflicts.
+This file is the bridge between the macOS app and all external tools (Claude Code skills, `marsh` CLI, tmux HUD). It is written atomically to prevent read conflicts. The path can be overridden with the `MARSHROOM_STATE` environment variable or via Settings → General → State File (see [Multi-Machine Setup](#9-multi-machine-setup)).
 
 **Schema (v3):**
 
@@ -458,7 +458,56 @@ marsh pr
 #   PR: https://github.com/owner/repo/pull/99
 ```
 
-## 9. Troubleshooting
+## 9. Multi-Machine Setup
+
+Marshroom supports sharing `state.json` across multiple machines (e.g., MacBook Pro + Mac Mini) using NFS over Tailscale.
+
+### Environment variable
+
+Set `MARSHROOM_STATE` to override the default state.json path:
+
+```bash
+# In ~/.zshrc
+export MARSHROOM_STATE="/mnt/marshroom/state.json"
+```
+
+This is respected by:
+- `marsh` CLI (all subcommands)
+- Claude Code skills (`/start-issue`, `/create-pr`, `/validate-pr`)
+- The `marsh-enforce.sh` hook
+
+### GUI configuration
+
+Open **Settings** (`Cmd+,`) → **General** tab → **State File** section. Set the path to the shared state.json file (e.g., `/mnt/marshroom/state.json`). The env var takes priority over the GUI setting.
+
+When a remote path is detected (outside `$HOME`), Marshroom automatically switches from kqueue-based file watching to poll-based watching (every 3 seconds), since kqueue cannot detect changes made over NFS.
+
+### NFS + Tailscale setup
+
+```bash
+# 1. On the NFS server (e.g., Mac Mini):
+mkdir -p ~/.config/marshroom
+sudo tee -a /etc/exports <<< '/Users/you/.config/marshroom -mapall=you -network 100.64.0.0 -mask 255.192.0.0'
+sudo nfsd enable && sudo nfsd restart
+
+# 2. On the client (e.g., MacBook Pro):
+sudo mkdir -p /mnt/marshroom
+sudo mount -t nfs server-hostname:/Users/you/.config/marshroom /mnt/marshroom
+
+# 3. Set the env var:
+echo 'export MARSHROOM_STATE="/mnt/marshroom/state.json"' >> ~/.zshrc
+```
+
+For permanent mounts, configure `/etc/fstab` or `automount`.
+
+### Resolution priority
+
+The state.json path is resolved in this order:
+1. `MARSHROOM_STATE` environment variable
+2. Custom path set in Settings → General → State File
+3. Default: `~/.config/marshroom/state.json`
+
+## 10. Troubleshooting
 
 ### No state.json found
 

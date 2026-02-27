@@ -7,12 +7,12 @@ Create a Pull Request for a Marshroom cart issue matching the current branch.
 
 ## Critical Requirements
 
-- **state.json update is MANDATORY**. After creating the PR, you MUST update the issue status to `pending` with `prNumber` and `prURL` in `~/.config/marshroom/state.json`. If this fails, stop and report the error — do NOT silently continue.
+- **state.json update is MANDATORY**. After creating the PR, you MUST update the issue status to `pending` with `prNumber` and `prURL` in `${MARSHROOM_STATE:-~/.config/marshroom/state.json}`. If this fails, stop and report the error — do NOT silently continue.
 - Use `marsh pr` if available; otherwise fall back to direct `jq` atomic write (see step 9).
 
 ## Steps
 
-1. Read `~/.config/marshroom/state.json` and parse the JSON
+1. Read `${MARSHROOM_STATE:-~/.config/marshroom/state.json}` and parse the JSON
 2. Run `git branch --show-current` to get the current branch name
 3. Find the cart entry matching the current branch and repo. Use relaxed matching:
    - First try exact `branchName` match
@@ -36,10 +36,11 @@ Create a Pull Request for a Marshroom cart issue matching the current branch.
    - First try: `marsh pr`
    - If `marsh` is not found in PATH, fall back to direct atomic update using the PR number and URL from step 8:
      ```bash
-     TMP="$(mktemp ~/.config/marshroom/state.json.XXXXXX)"
+     STATE_FILE="${MARSHROOM_STATE:-~/.config/marshroom/state.json}"
+     TMP="$(mktemp "${STATE_FILE}.XXXXXX")"
      jq --argjson n ISSUE_NUMBER --argjson prNum PR_NUMBER --arg prUrl "PR_URL" \
        '.cart |= map(if .issueNumber == $n then .status = "pending" | .prNumber = $prNum | .prURL = $prUrl else . end)' \
-       ~/.config/marshroom/state.json > "$TMP" && mv -f "$TMP" ~/.config/marshroom/state.json
+       "$STATE_FILE" > "$TMP" && mv -f "$TMP" "$STATE_FILE"
      ```
    - Verify the update succeeded by reading state.json and confirming status is `pending`
 10. Display the result:
