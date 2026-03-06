@@ -1,6 +1,6 @@
 ---
 name: validate-pr
-description: Validate the current Pull Request branch name, body, and status against Marshroom conventions
+description: Validates the current Pull Request branch name, body, and status against Marshroom conventions (branch prefix pattern, ticket reference in body, and cart status). Use when the user asks to "validate PR", "check pull request", "check PR conventions", "verify branch naming", or wants to confirm a PR or merge request is correctly set up before review or merge.
 ---
 
 Validate the current Pull Request against Marshroom conventions.
@@ -19,7 +19,9 @@ Steps:
 
 **PR Body Check:**
 - The body MUST contain `close #{issueNumber}`
-- If missing, suggest: `gh pr edit --body "$(gh pr view --json body -q '.body')\n\nclose #<issueNumber>"`
+- If missing, use the `issueNumber` extracted from the matched cart entry in state.json (e.g., via `jq '.carts[] | select(.branchName=="<branch>") | .issueNumber' state.json`) and suggest:
+  `gh pr edit --body "$(gh pr view --json body -q '.body')\n\nclose #<issueNumber>"`
+  where `<issueNumber>` is replaced with the actual value from the cart entry.
 
 **Status Check:**
 - Read the `status` field from the matched cart entry

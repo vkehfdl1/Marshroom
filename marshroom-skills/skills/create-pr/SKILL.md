@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: Create a Pull Request for a Marshroom cart issue matching the current branch with proper closing keywords
+description: Creates a Pull Request (PR) for a Marshroom cart issue matching the current branch. Automatically commits and pushes the branch, constructs a PR body with issue context and a closing keyword (e.g., `close #N`) to auto-close the linked issue, generates the PR title from the cart entry, verifies the closing keyword after creation, and updates the issue status to `pending` with PR number and URL in state.json. Detects the matching cart entry by branch name using exact or suffix matching. Use when the user asks to create a PR, open a pull request, submit a PR, submit changes for review, raise a merge request, push changes, close an issue via PR, link an issue to a PR, or push a Marshroom cart issue branch to GitHub — including phrases like 'make a PR', 'push my changes', 'submit this branch', 'create a pull request', 'open a PR for this issue', 'open PR', 'create merge request', or 'link issue to PR'.
 ---
 
 Create a Pull Request for a Marshroom cart issue matching the current branch.
