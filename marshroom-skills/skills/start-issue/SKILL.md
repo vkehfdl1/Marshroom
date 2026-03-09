@@ -1,6 +1,6 @@
 ---
 name: start-issue
-description: Start working on a Marshroom cart issue — creates branch, injects context, updates status to running
+description: Starts working on a Marshroom cart issue by creating a branch, injecting issue context, and updating the status to running. Use when a user wants to start, begin, or pick up a Marshroom issue, ticket, or task — e.g. "start issue #42", "begin task", "pick up ticket", "work on Marshroom issue", or "start development on this cart item".
 ---
 
 Start working on a Marshroom cart issue in the current repository.
